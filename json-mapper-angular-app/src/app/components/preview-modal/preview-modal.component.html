@@ -1,0 +1,29 @@
+<div class="preview-modal-backdrop" data-testid="preview-modal-backdrop" (click)="closeModal()">
+  <section class="preview-modal" data-testid="preview-modal" (click)="$event.stopPropagation()">
+    <div class="preview-modal-head">
+      <div>
+        <span class="preview-modal-kicker">Preview</span>
+        <h2>{{ title }}</h2>
+        <p>{{ copy }}</p>
+      </div>
+      <button
+        type="button"
+        class="preview-modal-close"
+        [attr.aria-label]="closeLabel"
+        [attr.title]="closeLabel"
+        data-testid="preview-modal-close"
+        (click)="closeModal()"
+      >
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+
+    <app-preview-tabs
+      [generatedSchema]="generatedSchema"
+      [previewJson]="previewJson"
+      [persistedDocument]="persistedDocument"
+      [exportFileBase]="exportFileBase"
+      [validationErrors]="validationErrors"
+    />
+  </section>
+</div>

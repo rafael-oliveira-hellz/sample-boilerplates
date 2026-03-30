@@ -1,0 +1,250 @@
+<section class="panel tree-panel" data-testid="source-panel">
+  <div class="panel-header">
+    <div>
+      <p class="panel-kicker">Origem</p>
+      <h2>{{ texts.panelTitle }}</h2>
+      <p class="panel-copy">{{ texts.panelCopy }}</p>
+    </div>
+
+    <div class="mode-switch">
+      <button type="button" [class.active]="!technicalMode" (click)="toggleMode('builder')">Builder</button>
+      <button type="button" [class.active]="technicalMode" (click)="toggleMode('json')">JSON</button>
+    </div>
+  </div>
+
+  <div class="panel-stats">
+    <div class="stat-chip">
+      <strong>{{ visibleLeafCount() }}</strong>
+      <span>{{ texts.visibleFields }}</span>
+    </div>
+    <div class="stat-chip">
+      <strong>{{ usedPaths.size }}</strong>
+      <span>{{ texts.usedFields }}</span>
+    </div>
+    @if (selectedNode(); as node) {
+      <div class="stat-chip selected">
+        <strong>{{ node.kind == 'field' ? node.type : node.kind }}</strong>
+        <span>{{ node.displayPath }}</span>
+      </div>
+    }
+  </div>
+
+  @if (technicalMode) {
+    @defer (when technicalMode) {
+      <app-schema-technical-panel
+        [importTitle]="texts.importTitle"
+        [importCopy]="texts.importCopy"
+        [importAction]="texts.importAction"
+        [templateAction]="texts.templateAction"
+        templateHref="/examples/schema-origem-exemplo.json"
+        templateDownloadName="schema-origem-exemplo.json"
+        [editorTitle]="texts.editorTitle"
+        [editorCopy]="texts.editorCopy"
+        [editorAction]="texts.editorAction"
+        [editorFootnote]="texts.editorFootnote"
+        [noFile]="texts.noFile"
+        [clearFile]="texts.clearFile"
+        [viewerMode]="texts.viewerMode"
+        [editorMode]="texts.editorMode"
+        [viewerEmpty]="texts.viewerEmpty"
+        [rawJsonText]="rawJsonText"
+        [importedFile]="importedFile"
+        [error]="sourceError"
+        [panelMode]="technicalPanelMode"
+        fileName="schema-origem.json"
+        placeholder='Cole aqui o JSON Schema de origem, por exemplo { "type": "object", "properties": {} }'
+        helperText="Use este editor para revisar ou colar o JSON completo da origem."
+        (fileImported)="handleImportedFile($event)"
+        (clearFileRequested)="clearImportedFile()"
+        (rawJsonTextChange)="rawJsonTextChange.emit($event)"
+        (applyText)="importSchema.emit()"
+        (panelModeChange)="setTechnicalPanelMode($event)"
+      />
+    } @placeholder {
+      <div class="technical-editor-placeholder">Carregando painel tecnico...</div>
+    }
+  } @else {
+    <div class="toolbar">
+      <input [(ngModel)]="search" [placeholder]="texts.searchPlaceholder" />
+      <select [(ngModel)]="typeFilter">
+        <option value="all">Todos os tipos</option>
+        @for (group of nodeTypeOptions; track group.label) {
+          <optgroup [label]="group.label">
+            @for (option of group.options; track option.value) {
+              <option [value]="option.value">{{ option.label }}</option>
+            }
+          </optgroup>
+        }
+      </select>
+      <select [(ngModel)]="usageFilter">
+        <option value="all">Tudo</option>
+        <option value="used">So usados</option>
+        <option value="unused">So livres</option>
+        <option value="leaves">So folhas</option>
+      </select>
+      <button type="button" class="ghost" (click)="clearFilters()">{{ texts.clearFilters }}</button>
+    </div>
+
+    <div class="toolbar compact search-nav">
+      <span class="search-count">{{ searchMatches().length }} {{ texts.searchCount }}</span>
+    </div>
+
+    @if (selectedNode(); as node) {
+      <div class="selection-card">
+        <div class="selection-top">
+          <strong>{{ node.label }}</strong>
+          <span class="badge">{{ node.kind == 'field' ? node.type : node.kind }}</span>
+        </div>
+        @if (node.kind == 'field') {
+          <label class="node-type-editor">
+            <span>{{ texts.typeLabel }}</span>
+            <select
+              [ngModel]="node.type"
+              (ngModelChange)="updateSelectedNodeType($event)"
+              data-testid="source-node-type-select"
+            >
+              @for (group of nodeTypeOptions; track group.label) {
+                <optgroup [label]="group.label">
+                  @for (option of group.options; track option.value) {
+                    <option [value]="option.value">{{ option.label }}</option>
+                  }
+                </optgroup>
+              }
+            </select>
+          </label>
+        }
+        @if (node.kind != 'root') {
+          <label class="nullable-toggle">
+            <input
+              type="checkbox"
+              [ngModel]="node.nullable"
+              (ngModelChange)="updateSelectedNodeNullable($event)"
+              data-testid="source-node-nullable-toggle"
+            />
+            <span>Aceita nulo</span>
+          </label>
+        }
+        <div class="breadcrumbs">
+          @for (step of breadcrumb(node); track step) {
+            <span>{{ step }}</span>
+          }
+        </div>
+        <small>{{ node.path }}</small>
+      </div>
+    }
+
+    <div class="toolbar compact">
+      <button type="button" class="ghost" (click)="expandAll.emit()">{{ texts.expandAll }}</button>
+      <button type="button" class="ghost" (click)="collapseAll.emit()">{{ texts.collapseAll }}</button>
+    </div>
+
+    <div class="toolbar compact">
+      <button type="button" class="ghost" (click)="addNode.emit('field')">{{ texts.addField }}</button>
+      <button type="button" class="ghost" (click)="addNode.emit('object')">{{ texts.addObject }}</button>
+      <button type="button" class="ghost" (click)="addNode.emit('array')">{{ texts.addArray }}</button>
+    </div>
+
+    <div class="toolbar compact">
+      <button type="button" class="danger" (click)="removeNode.emit()">{{ texts.removeSelected }}</button>
+    </div>
+
+    <div class="guide-card">
+      <strong>{{ texts.manualGuideTitle }}</strong>
+      <ol>
+        <li>{{ texts.manualGuideStep1 }}</li>
+        <li>{{ texts.manualGuideStep2 }}</li>
+        <li>{{ texts.manualGuideStep3 }}</li>
+        <li>{{ texts.manualGuideStep4 }}</li>
+      </ol>
+    </div>
+
+    <div class="tree-shell">
+      <ng-container
+        *ngTemplateOutlet="treeTemplate; context: { $implicit: nodes, depth: 0 }"
+      ></ng-container>
+      @if (visibleLeafCount() == 0) {
+        <div class="empty-tree">{{ texts.noMatches }}</div>
+      }
+    </div>
+  }
+</section>
+
+<ng-template #treeTemplate let-items let-depth="depth">
+  @for (node of items; track trackNode($index, node)) {
+    @if (matches(node)) {
+      <div
+        class="tree-row"
+        [style.--depth]="depth"
+        [class.selected]="selectedNodeId == node.id"
+        [class.used]="usedPaths.has(node.path)"
+        [class.leaf]="node.kind == 'field'"
+      >
+        <button
+          type="button"
+          class="expander"
+          [class.empty]="!hasChildren(node)"
+          (click)="hasChildren(node) ? toggleNode.emit(node.id) : onSelect(node)"
+        >
+          {{ hasChildren(node) ? (node.expanded ? '▾' : '▸') : '•' }}
+        </button>
+
+        <button
+          type="button"
+          class="node-card"
+          data-testid="source-node-card"
+          [attr.data-node-id]="node.id"
+          [attr.data-node-path]="node.displayPath"
+          [attr.data-source-path]="node.path"
+          [draggable]="node.kind == 'field'"
+          (click)="onSelect(node)"
+          (dragstart)="onDragStart($event, node)"
+          (dragend)="endDrag.emit()"
+        >
+          <span class="node-main">
+            @if (editingNodeId == node.id) {
+              <span class="inline-rename" (click)="$event.stopPropagation()">
+                <input
+                  [(ngModel)]="inlineRenameValue"
+                  data-testid="inline-rename-input"
+                  class="inline-rename-input"
+                  placeholder="Novo nome"
+                  (click)="$event.stopPropagation()"
+                  (keydown.enter)="commitInlineRename(node.id, $event)"
+                  (keydown.escape)="cancelInlineRename($event)"
+                  autofocus
+                />
+                <button type="button" class="ghost inline-action-btn" (click)="commitInlineRename(node.id, $event)">Salvar</button>
+                <button type="button" class="ghost inline-action-btn" (click)="cancelInlineRename($event)">Cancelar</button>
+              </span>
+            } @else {
+              <strong [innerHTML]="highlightText(node.label)"></strong>
+              @if (!node.itemModel && node.kind != 'root') {
+                <button
+                  type="button"
+                  class="ghost edit-chip icon-only"
+                  data-testid="inline-rename-trigger"
+                  title="Renomear campo"
+                  aria-label="Renomear campo"
+                  (click)="startInlineRename(node, $event)"
+                >
+                  &#9998;
+                </button>
+              }
+            }
+            <span class="badge">{{ node.kind == 'field' ? node.type : node.kind }}</span>
+            @if (node.itemModel) {
+              <span class="item-badge">item-modelo</span>
+            }
+          </span>
+          <small [innerHTML]="highlightText(node.displayPath)"></small>
+        </button>
+      </div>
+
+      @if (node.expanded && hasChildren(node)) {
+        <ng-container
+          *ngTemplateOutlet="treeTemplate; context: { $implicit: node.children, depth: depth + 1 }"
+        ></ng-container>
+      }
+    }
+  }
+</ng-template>

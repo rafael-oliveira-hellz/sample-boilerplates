@@ -1,0 +1,73 @@
+<div class="shell-layout">
+  <header class="shell-hero">
+    <div>
+      <p class="panel-kicker">HOST SHELL</p>
+      <h1>Plataforma corporativa de microfrontends</h1>
+      <p>
+        Shell transversal da Porto Seguro para composição de remotes por domínio,
+        com contexto compartilhado, observabilidade e qualidade padronizada.
+      </p>
+    </div>
+    <div class="hero-status" [attr.data-state]="status()">
+      <strong>{{ status() === 'mounted' ? 'Remote montado' : status() === 'loading' ? 'Carregando remote' : status() === 'error' ? 'Falha ao montar' : 'Aguardando' }}</strong>
+      <span>{{ remotes[0].routePath }}</span>
+    </div>
+  </header>
+
+  <section class="shell-grid">
+    <aside class="shell-panel shell-sidebar">
+      <div class="panel-block">
+        <p class="panel-kicker">CONTEXTO</p>
+        <h2>Shell global</h2>
+        <dl>
+          <div>
+            <dt>Usuário</dt>
+            <dd>{{ shellContext().session.userId }}</dd>
+          </div>
+          <div>
+            <dt>Tenant</dt>
+            <dd>{{ shellContext().session.tenantId }}</dd>
+          </div>
+          <div>
+            <dt>Tema</dt>
+            <dd>{{ shellContext().theme }}</dd>
+          </div>
+          <div>
+            <dt>API</dt>
+            <dd>{{ shellContext().apiBaseUrl }}</dd>
+          </div>
+        </dl>
+      </div>
+
+      <div class="panel-block">
+        <p class="panel-kicker">REMOTE</p>
+        <h2>{{ remotes[0].domain }}</h2>
+        <p>{{ remotes[0].description }}</p>
+        <code>{{ remotes[0].remoteEntry }}</code>
+      </div>
+
+      <div class="panel-block">
+        <p class="panel-kicker">EVENTOS</p>
+        <h2>Eventos recentes</h2>
+        <ul>
+          <li *ngFor="let event of recentEvents()">
+            <strong>{{ event.type }}</strong>
+          </li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="shell-panel shell-remote">
+      <p class="panel-kicker">DOMÍNIO</p>
+      <h2>mfe-json-mapper</h2>
+      <p>
+        Nesta fase o host já compõe o remote piloto a partir do monorepo, preservando
+        contratos compartilhados e um ponto único de contexto transversal.
+      </p>
+      <div #remoteHost class="remote-host"></div>
+    </main>
+  </section>
+</div>
+
+
+

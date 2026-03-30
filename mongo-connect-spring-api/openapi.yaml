@@ -1,0 +1,643 @@
+openapi: 3.1.0
+info:
+  title: sboot-segu-aseg-hubin-ops API
+  version: 1.0.0
+  description: >-
+    API de CRUD para EVENT_TYPE com MongoDB, cache, rate limit, tracing,
+    observabilidade estruturada e hardening basico de seguranca. Todos os payloads
+    JSON devem ser enviados e consumidos em UTF-8. A API usa `application/json`
+    como media type padrao, e o runtime e configurado para UTF-8 no ambiente local
+    e em Docker.
+servers:
+  - url: http://localhost:8080
+    description: Local
+tags:
+  - name: Event Types
+    description: Operacoes de CRUD e ativacao/inativacao de tipos de evento
+paths:
+  /api/event-types:
+    get:
+      tags: [Event Types]
+      summary: Lista tipos de evento paginados
+      description: >-
+        Retorna a lista paginada de tipos de evento. A paginacao comeca em 1, a
+        busca textual e opcional e a ordenacao aceita `sortBy` e `direction`.
+        O parametro `direction` e case-insensitive e faz fallback para `desc`
+        quando vier com valor invalido. O endpoint produz `application/json`
+        em UTF-8.
+      operationId: listEventTypes
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/Search'
+        - $ref: '#/components/parameters/SortBy'
+        - $ref: '#/components/parameters/Direction'
+      responses:
+        '200':
+          description: Lista paginada retornada com sucesso
+          headers:
+            X-Trace-Id:
+              $ref: '#/components/headers/TraceId'
+            X-Span-Id:
+              $ref: '#/components/headers/SpanId'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventTypePageResponse'
+              examples:
+                default:
+                  value:
+                    items:
+                      - id: 20f1bb15-ef53-4656-a6b6-57a1d35f3a1d
+                        name: Sinistro Aberto
+                        description: Evento de abertura de sinistro
+                        active: true
+                        createdAt: '2026-03-29T12:00:00Z'
+                        updatedAt: '2026-03-29T12:00:00Z'
+                    page: 1
+                    size: 10
+                    totalItems: 1
+                    totalPages: 1
+                    hasNext: false
+                    hasPrevious: false
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags: [Event Types]
+      summary: Cadastra um novo tipo de evento
+      description: >-
+        Recebe e retorna `application/json` em UTF-8. Quando `active` vier
+        ausente, a aplicacao assume `true`.
+      operationId: createEventType
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventTypeRequest'
+            examples:
+              default:
+                value:
+                  name: Sinistro Aberto
+                  description: Evento de abertura de sinistro
+                  active: true
+      responses:
+        '201':
+          description: Tipo de evento criado com sucesso
+          headers:
+            Location:
+              description: URL relativa do recurso criado
+              schema:
+                type: string
+                format: uri-reference
+            X-Trace-Id:
+              $ref: '#/components/headers/TraceId'
+            X-Span-Id:
+              $ref: '#/components/headers/SpanId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventTypeResponse'
+              examples:
+                created:
+                  value:
+                    id: 20f1bb15-ef53-4656-a6b6-57a1d35f3a1d
+                    name: Sinistro Aberto
+                    description: Evento de abertura de sinistro
+                    active: true
+                    createdAt: '2026-03-29T12:00:00Z'
+                    updatedAt: '2026-03-29T12:00:00Z'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/event-types/{id}:
+    get:
+      tags: [Event Types]
+      summary: Busca um tipo de evento por id
+      description: Retorna `application/json` em UTF-8.
+      operationId: getEventTypeById
+      parameters:
+        - $ref: '#/components/parameters/EventTypeId'
+      responses:
+        '200':
+          description: Tipo de evento encontrado
+          headers:
+            X-Trace-Id:
+              $ref: '#/components/headers/TraceId'
+            X-Span-Id:
+              $ref: '#/components/headers/SpanId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventTypeResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      tags: [Event Types]
+      summary: Atualiza um tipo de evento
+      description: >-
+        Recebe e retorna `application/json` em UTF-8. Quando `active` vier
+        ausente, a aplicacao assume `true`.
+      operationId: updateEventType
+      parameters:
+        - $ref: '#/components/parameters/EventTypeId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventTypeRequest'
+      responses:
+        '200':
+          description: Tipo de evento atualizado com sucesso
+          headers:
+            X-Trace-Id:
+              $ref: '#/components/headers/TraceId'
+            X-Span-Id:
+              $ref: '#/components/headers/SpanId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventTypeResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags: [Event Types]
+      summary: Remove um tipo de evento
+      description: Remove o recurso e retorna `204 No Content`.
+      operationId: deleteEventType
+      parameters:
+        - $ref: '#/components/parameters/EventTypeId'
+      responses:
+        '204':
+          description: Tipo de evento removido com sucesso
+          headers:
+            X-Trace-Id:
+              $ref: '#/components/headers/TraceId'
+            X-Span-Id:
+              $ref: '#/components/headers/SpanId'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/event-types/{id}/active:
+    patch:
+      tags: [Event Types]
+      summary: Ativa ou desativa um tipo de evento
+      description: Recebe e retorna `application/json` em UTF-8.
+      operationId: updateEventTypeStatus
+      parameters:
+        - $ref: '#/components/parameters/EventTypeId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventTypeStatusRequest'
+            examples:
+              deactivate:
+                value:
+                  active: false
+      responses:
+        '200':
+          description: Status do tipo de evento atualizado com sucesso
+          headers:
+            X-Trace-Id:
+              $ref: '#/components/headers/TraceId'
+            X-Span-Id:
+              $ref: '#/components/headers/SpanId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventTypeResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+components:
+  parameters:
+    EventTypeId:
+      name: id
+      in: path
+      required: true
+      description: Identificador UUID do tipo de evento
+      schema:
+        type: string
+        format: uuid
+    Page:
+      name: page
+      in: query
+      required: false
+      description: Pagina da consulta, iniciando em 1
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    Size:
+      name: size
+      in: query
+      required: false
+      description: Quantidade de itens por pagina
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 10
+    Search:
+      name: search
+      in: query
+      required: false
+      description: Busca textual por nome ou descricao
+      schema:
+        type: string
+        maxLength: 100
+    SortBy:
+      name: sortBy
+      in: query
+      required: false
+      description: Campo de ordenacao
+      schema:
+        type: string
+        enum: [name, createdAt, updatedAt, active]
+        default: name
+    Direction:
+      name: direction
+      in: query
+      required: false
+      description: >-
+        Direcao da ordenacao. Aceita `asc` ou `desc` em qualquer capitalizacao.
+        Qualquer outro valor sofre fallback para `desc`.
+      schema:
+        type: string
+        default: desc
+      examples:
+        asc:
+          value: asc
+        desc:
+          value: DESC
+        fallback:
+          value: qualquer-coisa
+          summary: Valor invalido que sera tratado como desc
+  headers:
+    TraceId:
+      description: Identificador de trace para correlacao
+      schema:
+        type: string
+    SpanId:
+      description: Identificador de span para correlacao
+      schema:
+        type: string
+    RateLimitLimit:
+      description: Limite de requisicoes por janela
+      schema:
+        type: integer
+    RateLimitRemaining:
+      description: Quantidade restante de requisicoes na janela atual
+      schema:
+        type: integer
+    RateLimitReset:
+      description: Epoch second do reset da janela atual
+      schema:
+        type: integer
+    RetryAfter:
+      description: Segundos ate poder tentar novamente
+      schema:
+        type: integer
+  responses:
+    BadRequest:
+      description: Requisicao invalida
+      headers:
+        X-Trace-Id:
+          $ref: '#/components/headers/TraceId'
+        X-Span-Id:
+          $ref: '#/components/headers/SpanId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorResponse'
+          examples:
+            validation:
+              value:
+                timestamp: '2026-03-29T12:00:00Z'
+                status: 400
+                error: Bad Request
+                message: Erro de validacao
+                path: /api/event-types
+                traceId: '1234567890abcdef1234567890abcdef'
+                spanId: '1234567890abcdef'
+                fields:
+                  size: '[size] deve ser menor ou igual a 100'
+    Unauthorized:
+      description: Nao autenticado ou rejeitado pela camada corporativa de autenticacao
+      headers:
+        X-Trace-Id:
+          $ref: '#/components/headers/TraceId'
+        X-Span-Id:
+          $ref: '#/components/headers/SpanId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorResponse'
+          examples:
+            corporateAuth:
+              value:
+                timestamp: '2026-03-29T12:00:00Z'
+                status: 401
+                error: Unauthorized
+                message: Nao autenticado ou rejeitado pela camada corporativa de autenticacao.
+                path: /api/event-types
+                traceId: '1234567890abcdef1234567890abcdef'
+                spanId: '1234567890abcdef'
+                fields: {}
+    Conflict:
+      description: Conflito de unicidade
+      headers:
+        X-Trace-Id:
+          $ref: '#/components/headers/TraceId'
+        X-Span-Id:
+          $ref: '#/components/headers/SpanId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorResponse'
+          examples:
+            duplicate:
+              value:
+                timestamp: '2026-03-29T12:00:00Z'
+                status: 409
+                error: Conflict
+                message: Registro duplicado. Violacao de unicidade no MongoDB.
+                path: /api/event-types
+                traceId: '1234567890abcdef1234567890abcdef'
+                spanId: '1234567890abcdef'
+                fields: {}
+    NotFound:
+      description: Recurso nao encontrado
+      headers:
+        X-Trace-Id:
+          $ref: '#/components/headers/TraceId'
+        X-Span-Id:
+          $ref: '#/components/headers/SpanId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorResponse'
+          examples:
+            missing:
+              value:
+                timestamp: '2026-03-29T12:00:00Z'
+                status: 404
+                error: Not Found
+                message: Recurso nao encontrado.
+                path: /api/event-types/20f1bb15-ef53-4656-a6b6-57a1d35f3a1d
+                traceId: '1234567890abcdef1234567890abcdef'
+                spanId: '1234567890abcdef'
+                fields: {}
+    TooManyRequests:
+      description: Limite de requisicoes excedido
+      headers:
+        Retry-After:
+          $ref: '#/components/headers/RetryAfter'
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/RateLimitLimit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/RateLimitRemaining'
+        X-RateLimit-Reset:
+          $ref: '#/components/headers/RateLimitReset'
+        X-Trace-Id:
+          $ref: '#/components/headers/TraceId'
+        X-Span-Id:
+          $ref: '#/components/headers/SpanId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorResponse'
+          examples:
+            throttled:
+              value:
+                timestamp: '2026-03-29T12:00:00Z'
+                status: 429
+                error: Too Many Requests
+                message: Limite de requisicoes excedido.
+                path: /api/event-types
+                traceId: '1234567890abcdef1234567890abcdef'
+                spanId: '1234567890abcdef'
+                fields: {}
+    ServiceUnavailable:
+      description: Dependencia indisponivel
+      headers:
+        X-Trace-Id:
+          $ref: '#/components/headers/TraceId'
+        X-Span-Id:
+          $ref: '#/components/headers/SpanId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorResponse'
+          examples:
+            mongo:
+              value:
+                timestamp: '2026-03-29T12:00:00Z'
+                status: 503
+                error: Service Unavailable
+                message: Falha de comunicacao com o MongoDB.
+                path: /api/event-types
+                traceId: '1234567890abcdef1234567890abcdef'
+                spanId: '1234567890abcdef'
+                fields: {}
+    InternalServerError:
+      description: Erro interno do servidor
+      headers:
+        X-Trace-Id:
+          $ref: '#/components/headers/TraceId'
+        X-Span-Id:
+          $ref: '#/components/headers/SpanId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorResponse'
+          examples:
+            unexpected:
+              value:
+                timestamp: '2026-03-29T12:00:00Z'
+                status: 500
+                error: Internal Server Error
+                message: Erro interno nao tratado.
+                path: /api/event-types
+                traceId: '1234567890abcdef1234567890abcdef'
+                spanId: '1234567890abcdef'
+                fields: {}
+  schemas:
+    EventTypeRequest:
+      type: object
+      additionalProperties: false
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 3
+          maxLength: 120
+          description: Nome do tipo de evento
+        description:
+          type: string
+          maxLength: 255
+          nullable: true
+          description: Descricao do tipo de evento
+        active:
+          type: boolean
+          nullable: true
+          description: >-
+            Situacao do tipo de evento. Quando omitido em create/update, a aplicacao
+            assume `true`.
+    EventTypeStatusRequest:
+      type: object
+      additionalProperties: false
+      required: [active]
+      properties:
+        active:
+          type: boolean
+          description: Situacao desejada do tipo de evento
+    EventTypeResponse:
+      type: object
+      additionalProperties: false
+      required: [id, name, active, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        active:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    EventTypePageResponse:
+      allOf:
+        - $ref: '#/components/schemas/BasePageResponse'
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/EventTypeResponse'
+    BasePageResponse:
+      type: object
+      additionalProperties: false
+      required: [items, page, size, totalItems, totalPages, hasNext, hasPrevious]
+      properties:
+        items:
+          type: array
+          items: {}
+        page:
+          type: integer
+          minimum: 1
+        size:
+          type: integer
+          minimum: 1
+          maximum: 100
+        totalItems:
+          type: integer
+          minimum: 0
+        totalPages:
+          type: integer
+          minimum: 0
+        hasNext:
+          type: boolean
+        hasPrevious:
+          type: boolean
+    ApiErrorResponse:
+      type: object
+      additionalProperties: false
+      required: [timestamp, status, error, message, path]
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: integer
+        error:
+          type: string
+        message:
+          type: string
+        path:
+          type: string
+        traceId:
+          type: string
+          nullable: true
+        spanId:
+          type: string
+          nullable: true
+        fields:
+          type: object
+          nullable: true
+          additionalProperties:
+            type: string
+

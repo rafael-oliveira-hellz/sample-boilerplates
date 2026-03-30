@@ -1,0 +1,120 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "data": {
+      "type": "object",
+      "properties": {
+        "contrato": {
+          "type": "object",
+          "properties": {
+            "numero": {
+              "type": "string",
+              "concat": {
+                "alias": [
+                  "dadosApolice.codigoSucursal",
+                  "dadosApolice.ramo",
+                  "dadosApolice.numeroApolice",
+                  "dadosApolice.numeroItem"
+                ]
+              }
+            }
+          }
+        },
+        "proposta": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "concat": {
+                "alias": [
+                  "dadosApolice.origemPropostaPrincipal",
+                  "dadosApolice.numeroPropostaPrincipal"
+                ]
+              }
+            }
+          }
+        },
+        "tipoContrato": {
+          "type": "string",
+          "default": "APOLICE"
+        },
+        "marcaDescricao": {
+          "type": "string",
+          "eval": {
+            "alias": "dadosApolice.codigoMarca == 1001 ? 'Porto' : null"
+          }
+        },
+        "pacotes": {
+          "type": "array",
+          "map_from": {
+            "alias": [
+              "pacotes"
+            ],
+            "items": {
+              "type": "object",
+              "properties": {
+                "pacoteId": {
+                  "type": "string",
+                  "alias": [
+                    "codigoPacote"
+                  ]
+                },
+                "itens": {
+                  "type": "array",
+                  "map_from": {
+                    "alias": [
+                      "itens"
+                    ],
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "itemId": {
+                          "type": "string",
+                          "alias": [
+                            "codigoItem"
+                          ]
+                        },
+                        "coberturas": {
+                          "type": "array",
+                          "map_from": {
+                            "alias": [
+                              "coberturas"
+                            ],
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "coberturaId": {
+                                  "type": "string",
+                                  "alias": [
+                                    "codigoCobertura"
+                                  ]
+                                },
+                                "valor": {
+                                  "type": "number",
+                                  "alias": [
+                                    "valorCobertura"
+                                  ]
+                                },
+                                "documentoCondutor": {
+                                  "type": "integer",
+                                  "alias": [
+                                    "dadosCondutor.numeroCpfCnpj"
+                                  ]
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

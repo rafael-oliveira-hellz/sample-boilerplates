@@ -1,0 +1,337 @@
+<main class="workspace">
+  <section class="hero">
+    <div>
+      <p class="eyebrow">Angular 19.1.x + API Java + Editor visual V2</p>
+      <h1>{{ texts.heroTitle }}</h1>
+      <p class="hero-copy">{{ texts.heroCopy }}</p>
+
+      <div class="hero-stats">
+        <div class="hero-chip">
+          <strong>{{ facade.sourceLeafOptions().length }}</strong>
+          <span>campos na origem</span>
+        </div>
+        <div class="hero-chip">
+          <strong>{{ facade.targetLeafOptions().length }}</strong>
+          <span>campos no destino</span>
+        </div>
+        <div class="hero-chip">
+          <strong>{{ facade.mappedTargets().length }}</strong>
+          <span>campos mapeados</span>
+        </div>
+        <div class="hero-chip">
+          <strong>{{ facade.rules().length }}</strong>
+          <span>geradores visuais</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-actions">
+      <button type="button" (click)="facade.saveConfig()" [disabled]="facade.isSaving()">{{ texts.saveButton }}</button>
+      <button type="button" class="ghost" (click)="facade.loadLatestConfig()" [disabled]="facade.isLoadingLatest()">
+        {{ texts.loadButton }}
+      </button>
+      @if (facade.saveStatus()) {
+        <p class="status ok">{{ facade.saveStatus() }}</p>
+      }
+      @if (facade.saveError()) {
+        <p class="status error">{{ facade.saveError() }}</p>
+      }
+      @if (facade.lastSavedResponse()) {
+        <small>
+          @if (facade.lastSavedResponse()!.id) {
+            ID salvo: {{ facade.lastSavedResponse()!.id }}
+          } @else if (facade.lastSavedResponse()!.fileName) {
+            {{ texts.savedFileLabel }} {{ facade.lastSavedResponse()!.fileName }}
+          }
+        </small>
+      }
+    </div>
+  </section>
+
+  <section class="meta-bar">
+    <div class="meta-card">
+      <label for="nomeParceiro">{{ texts.partnerLabel }}</label>
+      <input
+        id="nomeParceiro"
+        [ngModel]="facade.persistenceMetadata().nomeParceiro"
+        (ngModelChange)="facade.updatePersistenceMetadata({ nomeParceiro: $event })"
+        placeholder="porto_teste_1"
+      />
+      <small class="meta-help">{{ texts.partnerHelp }}</small>
+    </div>
+
+    <div class="meta-card">
+      <label for="eventoParceiro">{{ texts.eventLabel }}</label>
+      <input
+        id="eventoParceiro"
+        [ngModel]="facade.persistenceMetadata().eventoParceiro"
+        (ngModelChange)="facade.updatePersistenceMetadata({ eventoParceiro: $event })"
+        placeholder="emissao"
+      />
+      <small class="meta-help">{{ texts.eventHelp }}</small>
+    </div>
+
+    <div class="meta-card">
+      <label for="tipoSchema">{{ texts.schemaTypeLabel }}</label>
+      <select
+        id="tipoSchema"
+        [ngModel]="facade.persistenceMetadata().tipoSchema"
+        (ngModelChange)="facade.updatePersistenceMetadata({ tipoSchema: $event })"
+      >
+        <option value="destino">destino</option>
+        <option value="origem">origem</option>
+      </select>
+      <small class="meta-help">{{ texts.schemaTypeHelp }}</small>
+    </div>
+
+    <div class="meta-card">
+      <label for="versaoSchema">{{ texts.versionLabel }}</label>
+      <input
+        id="versaoSchema"
+        [ngModel]="facade.persistenceMetadata().versaoSchema"
+        (ngModelChange)="facade.updatePersistenceMetadata({ versaoSchema: $event })"
+        placeholder="v1"
+      />
+      <small class="meta-help">{{ texts.versionHelp }}</small>
+    </div>
+
+  </section>
+
+  <section class="flow-bar">
+    <div class="flow-step primary">
+      <strong>{{ texts.flowStep1Title }}</strong>
+      <span>{{ texts.flowStep1Copy }}</span>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step primary">
+      <strong>{{ texts.flowStep2Title }}</strong>
+      <span>{{ texts.flowStep2Copy }}</span>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">
+      <strong>{{ texts.flowStep3Title }}</strong>
+      <span>{{ texts.flowStep3Copy }}</span>
+    </div>
+    @if (facade.dragSourcePath()) {
+      <div class="flow-drag-hint">Arrastando agora: {{ facade.dragSourcePath() }}</div>
+    }
+  </section>
+
+  <section class="builder-grid" #builderGrid (dragover)="trackWorkspaceDrag($event)" (mousemove)="trackWorkspaceHover($event)" (mouseleave)="clearWorkspaceHover()">
+    @if (showWorkspaceLinkOverlay()) {
+      <svg class="workspace-link-overlay" [attr.data-tone]="workspaceLinkTone()" [attr.viewBox]="workspaceLinkViewBox()" preserveAspectRatio="none" aria-hidden="true">
+        @for (connection of workspaceConnections(); track connection.id) {
+          <path
+            class="workspace-link-path"
+            [class.persistent]="connection.kind == 'persistent'"
+            [class.dragging]="connection.kind == 'drag'"
+            [class.highlighted]="connection.highlighted"
+            [class.dimmed]="connection.dimmed"
+            [attr.data-tone]="connection.tone"
+            [attr.d]="connection.path"
+          />
+          <circle
+            class="workspace-link-end"
+            [class.persistent]="connection.kind == 'persistent'"
+            [class.dragging]="connection.kind == 'drag'"
+            [class.highlighted]="connection.highlighted"
+            [class.dimmed]="connection.dimmed"
+            [attr.data-tone]="connection.tone"
+            [attr.cx]="connection.endX"
+            [attr.cy]="connection.endY"
+            [attr.r]="connection.kind == 'drag' ? 8 : 5"
+          />
+        }
+        @if (facade.dragSourcePath() && workspaceLinkTone() !== 'default') {
+          <g class="workspace-link-label" [attr.data-tone]="workspaceLinkTone()" [attr.transform]="'translate(' + workspaceLinkLabelX() + ' ' + workspaceLinkLabelY() + ')'">
+            <rect x="-52" y="-18" width="104" height="28" rx="14" />
+            <text text-anchor="middle" dominant-baseline="middle">{{ workspaceLinkLabel() }}</text>
+          </g>
+        }
+      </svg>
+    }
+
+    <div class="builder-column source-column" #sourceColumn>
+      @defer (on immediate) {
+        <app-source-schema-tree
+          [rawJsonText]="facade.sourceJsonText()"
+          [sourceError]="facade.sourceError()"
+          [nodes]="facade.sourceTree()"
+          [selectedNodeId]="facade.selectedSourceNodeId()"
+          [usedPaths]="facade.usedSourcePaths()"
+          (rawJsonTextChange)="facade.updateSourceJsonText($event)"
+          (importSchema)="facade.importSourceSchema()"
+          (importSchemaText)="facade.importSourceSchemaFromText($event)"
+          (selectNode)="facade.selectSourceNode($event)"
+          (toggleNode)="facade.toggleSourceNode($event)"
+          (startDrag)="facade.startDraggingSource($event)"
+          (endDrag)="facade.clearDraggingSource(); clearWorkspaceDrag()"
+          (addNode)="facade.addSourceNode($event)"
+          (renameNode)="facade.renameSourceNode($event)"
+          (updateNodeType)="facade.updateSourceNodeType($event)"
+          (updateNodeNullable)="facade.updateSourceNodeNullable($event)"
+          (removeNode)="facade.removeSourceNode()"
+          (expandAll)="facade.expandAllSourceNodes()"
+          (collapseAll)="facade.collapseAllSourceNodes()"
+        />
+      } @placeholder {
+        <section class="deferred-panel-placeholder builder-placeholder">
+          <strong>Carregando dados de entrada...</strong>
+          <span>A estrutura de origem e os atalhos de montagem aparecem em instantes.</span>
+        </section>
+      }
+    </div>
+
+    <div class="builder-column target-column" #targetColumn>
+      @defer (on immediate) {
+        <app-target-schema-builder
+          [rawJsonText]="facade.targetJsonText()"
+          [targetError]="facade.targetError()"
+          [nodes]="facade.targetTree()"
+          [selectedNodeId]="facade.selectedTargetNodeId()"
+          [mappedTargetIds]="facade.mappedTargetIds()"
+          [emptyTargetIds]="facade.emptyTargetIds()"
+          [ruleTargetIds]="facade.ruleTargetIds()"
+          [errorTargetIds]="facade.errorTargetIds()"
+          [draggedSourcePath]="facade.dragSourcePath()"
+          [highlightedConcatPortIndex]="hoveredConcatSegmentIndex()"
+          (hoverConcatPort)="setHoveredConcatSegment($event)"
+          (dropHoverChange)="setHoveredTargetNode($event)"
+          (rawJsonTextChange)="facade.updateTargetJsonText($event)"
+          (importSchema)="facade.importTargetSchema()"
+          (importSchemaText)="facade.importTargetSchemaFromText($event)"
+          (selectNode)="facade.selectTargetNode($event)"
+          (toggleNode)="facade.toggleTargetNode($event)"
+          (targetDrop)="facade.dropOnTargetNode($event); clearWorkspaceDrag()"
+          (addNode)="facade.addTargetNode($event)"
+          (renameNode)="facade.renameTargetNode($event)"
+          (updateNodeType)="facade.updateTargetNodeType($event)"
+          (updateNodeNullable)="facade.updateTargetNodeNullable($event)"
+          (removeNode)="facade.removeTargetNode()"
+          (expandAll)="facade.expandAllTargetNodes()"
+          (collapseAll)="facade.collapseAllTargetNodes()"
+        />
+      } @placeholder {
+        <section class="deferred-panel-placeholder builder-placeholder">
+          <strong>Carregando estrutura de saída...</strong>
+          <span>O destino, as áreas de drop e as ligações aparecem em instantes.</span>
+        </section>
+      }
+    </div>
+
+    <div class="builder-column inspector-column">
+      @defer (on immediate) {
+        <app-mapping-workbench
+          [mappedTargets]="facade.mappedTargets()"
+          [selectedTargetNode]="facade.selectedTargetNode()"
+          [targetTree]="facade.targetTree()"
+          [sourceOptions]="facade.sourceLeafOptions()"
+          [sourceNodeOptions]="facade.sourceNodeOptions()"
+          [validationErrors]="facade.validationErrors()"
+          [draggedSourcePath]="facade.dragSourcePath()"
+          [bindingModes]="facade.bindingModes"
+          [reviewCounts]="facade.reviewCounts()"
+          [ruleCount]="facade.ruleTargetIds().size"
+          [selectedTargetHasVisualRule]="facade.selectedTargetHasVisualRule()"
+          [selectedTargetRuleCount]="facade.selectedTargetRuleCount()"
+          [hoveredConcatSegmentIndex]="hoveredConcatSegmentIndex()"
+          (selectTarget)="facade.selectTargetNode($event)"
+          (hoverConcatSegment)="setHoveredConcatSegment($event)"
+          (applySuggestedMapping)="facade.applySuggestedMappingToSelectedTarget()"
+          (applySuggestedMappingsBatch)="facade.applySuggestedMappingsToEmptyTargets()"
+          (setBindingMode)="facade.setSelectedBindingMode($event)"
+          (clearBinding)="facade.clearSelectedBinding()"
+          (setAliasSource)="facade.setSelectedAliasSource($event)"
+          (addAliasFallback)="facade.addAliasFallback($event)"
+          (replaceAliasFallback)="facade.replaceAliasFallback($event.index, $event.path)"
+          (removeAliasFallback)="facade.removeAliasFallback($event)"
+          (updateAliasStrategy)="facade.updateSelectedAliasStrategy($event)"
+          (setDefaultLiteral)="facade.setSelectedDefaultLiteral($event)"
+          (setDefaultSource)="facade.setSelectedDefaultSource($event)"
+          (updateEvalExpression)="facade.updateSelectedEvalExpression($event)"
+          (updateScriptLanguage)="facade.updateSelectedScriptLanguage($event)"
+          (updateScriptSource)="facade.updateSelectedScriptSource($event)"
+          (updateScriptReturnType)="facade.updateSelectedScriptReturnType($event)"
+          (updateMapFromSource)="facade.updateSelectedMapFromSource($event)"
+          (addConcatSource)="facade.addConcatSource($event)"
+          (replaceConcatSource)="facade.replaceConcatSource($event.index, $event.path)"
+          (removeConcatSource)="facade.removeConcatSource($event)"
+          (moveConcatSource)="facade.moveConcatSource($event.index, $event.direction)"
+          (reorderConcatSource)="facade.reorderConcatSource($event.fromIndex, $event.toIndex)"
+          (updateConcatSeparator)="facade.updateConcatSeparator($event)"
+          (applyConcatSeparatorPreset)="facade.applyConcatSeparatorPreset($event)"
+          (updateConcatFormat)="facade.updateConcatFormat($event.index, $event.patch)"
+          (clearConcatFormat)="facade.clearConcatFormat($event)"
+          (updateAdvancedExpression)="facade.updateSelectedAdvancedExpression($event)"
+          (applyDefaultLiteralPreset)="facade.applyDefaultLiteralPreset($event)"
+        />
+      } @placeholder {
+        <section class="deferred-panel-placeholder builder-placeholder">
+          <strong>Carregando painel lateral...</strong>
+          <span>Os ajustes finos do campo aparecem em instantes.</span>
+        </section>
+      }
+    </div>
+  </section>
+
+  @if (facade.sourceLeafOptions().length > 0 && facade.targetLeafOptions().length > 0) {
+    @defer (on viewport) {
+      <app-rule-builder-drawer
+        [rules]="facade.rules()"
+        [operators]="facade.operators"
+        [sourceOptions]="facade.sourceLeafOptions()"
+        [targetOptions]="facade.targetLeafOptions()"
+        (createRule)="facade.createRule()"
+        (updateRuleName)="facade.updateRuleName($event.ruleId, $event.value)"
+        (updateRuleMatchMode)="facade.updateRuleMatchMode($event.ruleId, $event.mode)"
+        (removeRule)="facade.removeRule($event)"
+        (addCondition)="facade.addCondition($event)"
+        (updateCondition)="facade.updateCondition($event.ruleId, $event.conditionId, $event.patch)"
+        (removeCondition)="facade.removeCondition($event.ruleId, $event.conditionId)"
+        (addAction)="facade.addAction($event)"
+        (updateAction)="facade.updateAction($event.ruleId, $event.actionId, $event.patch)"
+        (removeAction)="facade.removeAction($event.ruleId, $event.actionId)"
+        (createRuleTemplate)="facade.createRuleTemplate($event)"
+      />
+    } @placeholder {
+      <section class="deferred-panel-placeholder">
+        <strong>Carregando regras visuais...</strong>
+        <span>Esse painel aparece por completo quando você chegar a esta área.</span>
+      </section>
+    }
+  }
+
+  <button
+    type="button"
+    class="preview-fab"
+    data-testid="preview-fab"
+    (click)="openPreviewModal()"
+  >
+    <span class="preview-fab-icon" aria-hidden="true">◉</span>
+    <span class="preview-fab-copy">
+      <strong>{{ texts.previewLauncher }}</strong>
+      <small>{{ facade.validationErrors().length }} alerta(s)</small>
+    </span>
+  </button>
+
+  @if (previewModalOpen) {
+    @defer (when previewModalOpen) {
+      <app-preview-modal
+        [title]="texts.previewModalTitle"
+        [copy]="texts.previewModalCopy"
+        [closeLabel]="texts.previewModalClose"
+        [generatedSchema]="facade.generatedTargetSchemaText()"
+        [previewJson]="facade.previewJson()"
+        [persistedDocument]="facade.persistenceDocumentJson()"
+        [exportFileBase]="facade.exportFileBase()"
+        [validationErrors]="facade.validationErrors()"
+        (close)="closePreviewModal()"
+      />
+    } @placeholder {
+      <section class="deferred-panel-placeholder preview-placeholder">
+        <strong>Carregando painel de conferência...</strong>
+        <span>O resultado final e os alertas aparecem aqui.</span>
+      </section>
+    }
+  }
+</main>

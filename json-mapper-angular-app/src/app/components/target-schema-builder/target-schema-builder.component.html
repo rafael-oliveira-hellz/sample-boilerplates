@@ -1,0 +1,301 @@
+<section class="panel tree-panel" data-testid="target-panel">
+  <div class="panel-header">
+    <div>
+      <p class="panel-kicker">Destino</p>
+      <h2>{{ texts.panelTitle }}</h2>
+      <p class="panel-copy">{{ texts.panelCopy }}</p>
+    </div>
+
+    <div class="mode-switch">
+      <button type="button" [class.active]="!technicalMode" (click)="toggleMode('builder')">Builder</button>
+      <button type="button" [class.active]="technicalMode" (click)="toggleMode('json')">JSON</button>
+    </div>
+  </div>
+
+  <div class="panel-stats">
+    <div class="stat-chip">
+      <strong>{{ visibleNodeCount() }}</strong>
+      <span>{{ texts.visibleNodes }}</span>
+    </div>
+    <div class="stat-chip">
+      <strong>{{ mappedTargetIds.size }}</strong>
+      <span>{{ texts.mappedFields }}</span>
+    </div>
+    <div class="stat-chip">
+      <strong>{{ emptyTargetIds.size }}</strong>
+      <span>{{ texts.emptyFields }}</span>
+    </div>
+    <div class="stat-chip">
+      <strong>{{ errorTargetIds.size }}</strong>
+      <span>{{ texts.withError }}</span>
+    </div>
+    @if (selectedNode(); as node) {
+      <div class="stat-chip selected">
+        <strong>{{ node.kind == 'field' ? node.type : node.kind }}</strong>
+        <span>{{ node.displayPath }}</span>
+      </div>
+    }
+  </div>
+
+  @if (technicalMode) {
+    @defer (when technicalMode) {
+      <app-schema-technical-panel
+        [importTitle]="texts.importTitle"
+        [importCopy]="texts.importCopy"
+        [importAction]="texts.importAction"
+        [templateAction]="texts.templateAction"
+        templateHref="/examples/schema-destino-exemplo.json"
+        templateDownloadName="schema-destino-exemplo.json"
+        [editorTitle]="texts.editorTitle"
+        [editorCopy]="texts.editorCopy"
+        [editorAction]="texts.editorAction"
+        [editorFootnote]="texts.editorFootnote"
+        [noFile]="texts.noFile"
+        [clearFile]="texts.clearFile"
+        [viewerMode]="texts.viewerMode"
+        [editorMode]="texts.editorMode"
+        [viewerEmpty]="texts.viewerEmpty"
+        [rawJsonText]="rawJsonText"
+        [importedFile]="importedFile"
+        [error]="targetError"
+        [panelMode]="technicalPanelMode"
+        fileName="schema-destino.json"
+        placeholder='Cole aqui o JSON Schema de destino, por exemplo { "type": "object", "properties": {} }'
+        helperText="Use este editor para revisar ou colar o JSON completo do destino."
+        (fileImported)="handleImportedFile($event)"
+        (clearFileRequested)="clearImportedFile()"
+        (rawJsonTextChange)="rawJsonTextChange.emit($event)"
+        (applyText)="importSchema.emit()"
+        (panelModeChange)="setTechnicalPanelMode($event)"
+      />
+    } @placeholder {
+      <div class="technical-editor-placeholder">Carregando painel tecnico...</div>
+    }
+  } @else {
+    <div class="toolbar">
+      <input [(ngModel)]="search" [placeholder]="texts.searchPlaceholder" />
+      <select [(ngModel)]="viewFilter">
+        <option value="all">Tudo</option>
+        <option value="mapped">So mapeados</option>
+        <option value="unmapped">So vazios</option>
+        <option value="leaves">So folhas</option>
+        <option value="containers">So containers</option>
+      </select>
+      <button type="button" class="ghost" (click)="clearFilters()">{{ texts.clearFilters }}</button>
+    </div>
+
+    <div class="toolbar compact search-nav">
+      <span class="search-count">{{ searchMatches().length }} {{ texts.searchCount }}</span>
+    </div>
+
+    @if (selectedNode(); as node) {
+      <div class="selection-card">
+        <div class="selection-top">
+          <strong>{{ node.label }}</strong>
+          <span class="badge">{{ node.kind == 'field' ? node.type : node.kind }}</span>
+        </div>
+        @if (node.kind == 'field') {
+          <label class="node-type-editor">
+            <span>{{ texts.typeLabel }}</span>
+            <select
+              [ngModel]="node.type"
+              (ngModelChange)="updateSelectedNodeType($event)"
+              data-testid="target-node-type-select"
+            >
+              @for (group of nodeTypeOptions; track group.label) {
+                <optgroup [label]="group.label">
+                  @for (option of group.options; track option.value) {
+                    <option [value]="option.value">{{ option.label }}</option>
+                  }
+                </optgroup>
+              }
+            </select>
+          </label>
+        }
+        @if (node.kind != 'root') {
+          <label class="nullable-toggle">
+            <input
+              type="checkbox"
+              [ngModel]="node.nullable"
+              (ngModelChange)="updateSelectedNodeNullable($event)"
+              data-testid="target-node-nullable-toggle"
+            />
+            <span>Aceita nulo</span>
+          </label>
+        }
+        <div class="breadcrumbs">
+          @for (step of breadcrumb(node); track step) {
+            <span>{{ step }}</span>
+          }
+        </div>
+        <small>{{ node.path }}</small>
+      </div>
+    }
+
+    <div class="toolbar compact">
+      <button type="button" class="ghost" (click)="expandAll.emit()">{{ texts.expandAll }}</button>
+      <button type="button" class="ghost" (click)="collapseAll.emit()">{{ texts.collapseAll }}</button>
+    </div>
+
+    <div class="toolbar compact">
+      <button type="button" class="ghost" (click)="addNode.emit('field')">{{ texts.addField }}</button>
+      <button type="button" class="ghost" (click)="addNode.emit('object')">{{ texts.addObject }}</button>
+      <button type="button" class="ghost" (click)="addNode.emit('array')">{{ texts.addArray }}</button>
+    </div>
+
+    <div class="toolbar compact">
+      <button type="button" class="danger" (click)="removeNode.emit()">{{ texts.removeSelected }}</button>
+    </div>
+
+    <div class="drop-banner" [class.active]="!!draggedSourcePath">
+      @if (draggedSourcePath) {
+        {{ texts.activeDropBannerPrefix }} {{ draggedSourcePath }} {{ texts.activeDropBannerSuffix }}
+      } @else {
+        {{ texts.idleDropBanner }}
+      }
+    </div>
+
+    <div class="guide-card">
+      <strong>{{ texts.manualGuideTitle }}</strong>
+      <ol>
+        <li>{{ texts.manualGuideStep1 }}</li>
+        <li>{{ texts.manualGuideStep2 }}</li>
+        <li>{{ texts.manualGuideStep3 }}</li>
+        <li>{{ texts.manualGuideStep4 }}</li>
+      </ol>
+    </div>
+
+    <div class="tree-shell">
+      <ng-container
+        *ngTemplateOutlet="treeTemplate; context: { $implicit: nodes, depth: 0 }"
+      ></ng-container>
+      @if (visibleNodeCount() == 0) {
+        <div class="empty-tree">{{ texts.noMatches }}</div>
+      }
+    </div>
+  }
+</section>
+
+<ng-template #treeTemplate let-items let-depth="depth">
+  @for (node of items; track trackNode($index, node)) {
+    @if (matches(node)) {
+      <div
+        class="tree-row"
+        [style.--depth]="depth"
+        [class.selected]="selectedNodeId == node.id"
+        [class.mapped]="mappedTargetIds.has(node.id)"
+        [class.empty-state]="emptyTargetIds.has(node.id)"
+        [class.rule-state]="ruleTargetIds.has(node.id)"
+        [class.error-state]="errorTargetIds.has(node.id)"
+        [class.drop-ready]="!!draggedSourcePath"
+        [class.drop-hover]="hoveredDropNodeId == node.id"
+        [class.drop-alias]="hoveredDropNodeId == node.id && dropIntent(node) == 'alias'"
+        [class.drop-concat]="hoveredDropNodeId == node.id && dropIntent(node) == 'concat'"
+        [class.drop-new-child]="hoveredDropNodeId == node.id && dropIntent(node) == 'new-child'"
+        [class.drop-overwrite]="hoveredDropNodeId == node.id && dropEffect(node) == 'overwrite'"
+        [class.drop-append]="hoveredDropNodeId == node.id && dropEffect(node) == 'append'"
+        [class.drop-noop]="hoveredDropNodeId == node.id && dropEffect(node) == 'noop'"
+      >
+        <button
+          type="button"
+          class="expander"
+          [class.empty]="!hasChildren(node)"
+          (click)="hasChildren(node) ? toggleNode.emit(node.id) : onSelect(node)"
+        >
+          {{ hasChildren(node) ? (node.expanded ? '▾' : '▸') : '•' }}
+        </button>
+
+        <div
+          class="node-card"
+          data-testid="target-node-card"
+          [attr.data-node-id]="node.id"
+          [attr.data-node-path]="node.displayPath"
+          (click)="onSelect(node)"
+          (dragover)="allowDrop($event, node)"
+          (dragleave)="clearDropHover(node.id)"
+          (drop)="onDrop($event, node.id)"
+        >
+          @if (fanInPorts(node).length > 0) {
+            <div class="fan-in-ports" aria-hidden="true">
+              @for (portIndex of fanInPorts(node); track portIndex) {
+                <span
+                  class="fan-in-port"
+                  [class.highlighted]="highlightedConcatPortIndex == portIndex"
+                  [class.dimmed]="highlightedConcatPortIndex !== null && highlightedConcatPortIndex != portIndex"
+                  [attr.data-target-port-parent]="node.id"
+                  [attr.data-target-port-index]="portIndex"
+                  [attr.title]="'Entrada ' + (portIndex + 1)"
+                  (mouseenter)="setHoveredConcatPort(portIndex)"
+                  (mouseleave)="setHoveredConcatPort(null)"
+                >
+                  {{ portIndex + 1 }}
+                </span>
+              }
+            </div>
+          }
+          <span class="node-main">
+            @if (editingNodeId == node.id) {
+              <span class="inline-rename" (click)="$event.stopPropagation()">
+                <input
+                  [(ngModel)]="inlineRenameValue"
+                  data-testid="inline-rename-input"
+                  class="inline-rename-input"
+                  placeholder="Novo nome"
+                  (click)="$event.stopPropagation()"
+                  (keydown.enter)="commitInlineRename(node.id, $event)"
+                  (keydown.escape)="cancelInlineRename($event)"
+                  autofocus
+                />
+                <button type="button" class="ghost inline-action-btn" (click)="commitInlineRename(node.id, $event)">Salvar</button>
+                <button type="button" class="ghost inline-action-btn" (click)="cancelInlineRename($event)">Cancelar</button>
+              </span>
+            } @else {
+              <strong [innerHTML]="highlightText(node.label)"></strong>
+              @if (!node.itemModel && node.kind != 'root') {
+                <button
+                  type="button"
+                  class="ghost edit-chip icon-only"
+                  data-testid="inline-rename-trigger"
+                  title="Renomear campo"
+                  aria-label="Renomear campo"
+                  (click)="startInlineRename(node, $event)"
+                >
+                  &#9998;
+                </button>
+              }
+            }
+            <span class="badge">{{ node.kind == 'field' ? node.type : node.kind }}</span>
+            @if (node.itemModel) {
+              <span class="item-badge">item-modelo</span>
+            }
+            @if (mappedTargetIds.has(node.id)) {
+              <span class="map-badge">mapeado</span>
+            }
+            @if (emptyTargetIds.has(node.id)) {
+              <span class="empty-badge">vazio</span>
+            }
+            @if (ruleTargetIds.has(node.id)) {
+              <span class="rule-badge">eval/script</span>
+            }
+            @if (errorTargetIds.has(node.id)) {
+              <span class="error-badge">erro</span>
+            }
+          </span>
+          <small [innerHTML]="highlightText(node.displayPath)"></small>
+          @if (hoveredDropNodeId == node.id && dropIntent(node) != 'none') {
+            <div class="drop-intent-chip">
+              <span class="drop-effect-pill">{{ dropEffect(node) == 'append' ? 'complementa' : dropEffect(node) == 'overwrite' ? 'sobrescreve' : dropEffect(node) == 'noop' ? 'sem mudanca' : 'cria' }}</span>
+              {{ dropIntentLabel(node) }}
+            </div>
+          }
+        </div>
+      </div>
+
+      @if (node.expanded && hasChildren(node)) {
+        <ng-container
+          *ngTemplateOutlet="treeTemplate; context: { $implicit: node.children, depth: depth + 1 }"
+        ></ng-container>
+      }
+    }
+  }
+</ng-template>

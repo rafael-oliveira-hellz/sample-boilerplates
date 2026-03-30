@@ -1,0 +1,16 @@
+{
+  "name": "@porto/shared-design-system",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./porto.css": "./src/porto.css"
+  },
+  "scripts": {
+    "build": "node -e \"console.log('shared-design-system: css and tokens')\""
+  },
+  "dependencies": {
+    "react": "^19.1.0"
+  }
+}

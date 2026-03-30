@@ -1,0 +1,41 @@
+:host {
+  display: block;
+}
+
+.tree-row.selected .node-card {
+  border-color: var(--porto-blue-strong);
+  box-shadow: 0 0 0 3px rgba(0, 160, 223, 0.14);
+  transform: translateX(2px);
+}
+
+.tree-row.used .node-card {
+  background: #f1f9ff;
+}
+
+.tree-row.leaf .node-card:hover {
+  border-color: var(--porto-blue);
+  box-shadow: 0 10px 20px rgba(0, 62, 126, 0.08);
+  transform: translateY(-1px);
+}
+
+.guide-card {
+  margin-bottom: 14px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 1px solid #d7e6f1;
+  background: linear-gradient(180deg, #fbfdff 0%, #f3f8fc 100%);
+  color: #5f7a90;
+}
+
+.guide-card strong {
+  display: block;
+  margin-bottom: 8px;
+  color: #1c4664;
+}
+
+.guide-card ol {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 6px;
+}

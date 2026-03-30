@@ -1,0 +1,16 @@
+{
+  "type": "object",
+  "properties": {
+    "data": {
+      "type": "object",
+      "properties": {
+        "marcaDescricao": {
+          "type": "string",
+          "eval": {
+            "alias": "dadosApolice.codigoMarca == 1001 ? \"Porto\" : null"
+          }
+        }
+      }
+    }
+  }
+}

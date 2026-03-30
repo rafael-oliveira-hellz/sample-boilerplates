@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "dadosApolice": {
+      "type": "object",
+      "properties": {
+        "codigoSucursal": { "type": "integer" },
+        "numeroApolice": { "type": "integer" },
+        "numeroItem": { "type": "integer" },
+        "origemPropostaPrincipal": { "type": "integer" },
+        "numeroPropostaPrincipal": { "type": "integer" },
+        "ramo": { "type": "integer" },
+        "codigoMarca": { "type": "integer" },
+        "marca": { "type": "string" }
+      }
+    },
+    "dadosCondutor": {
+      "type": "object",
+      "properties": {
+        "nome": { "type": "string" },
+        "tipoPessoa": { "type": "string" },
+        "numeroCpfCnpj": { "type": "integer" }
+      }
+    },
+    "itens": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "coberturas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "cod": { "type": "string" },
+                "valor": { "type": "number" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "pacotes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "codigoPacote": { "type": "string" },
+          "itens": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "codigoItem": { "type": "string" },
+                "coberturas": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "codigoCobertura": { "type": "string" },
+                      "valorCobertura": { "type": "number" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

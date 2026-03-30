@@ -1,0 +1,14 @@
+﻿{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./out-tsc/spec",
+    "types": [
+      "jasmine"
+    ]
+  },
+  "include": [
+    "apps/mfe-json-mapper/src/**/*.spec.ts",
+    "apps/mfe-json-mapper/src/**/*.d.ts",
+    "libs/**/*.d.ts"
+  ]
+}

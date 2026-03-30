@@ -1,0 +1,9 @@
+application:
+  security:
+    corporate-filter:
+      enabled: false
+  rate-limit:
+    enabled: false
+  observability:
+    http:
+      enabled: false

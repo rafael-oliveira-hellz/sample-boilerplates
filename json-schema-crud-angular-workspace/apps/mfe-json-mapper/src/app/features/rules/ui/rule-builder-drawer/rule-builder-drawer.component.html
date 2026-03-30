@@ -1,0 +1,301 @@
+<section class="panel rule-panel" data-testid="rule-builder">
+  <div class="panel-header">
+    <div>
+      <p class="panel-kicker">Assistente visual</p>
+      <h2>{{ texts.panelTitle }}</h2>
+      <p class="panel-copy">{{ texts.panelCopy }}</p>
+      <small class="panel-copy">{{ texts.helper }}</small>
+    </div>
+    @if (sourceOptions.length > 0 && targetOptions.length > 0) {
+      <button type="button" (click)="createRule.emit()">{{ texts.createButton }}</button>
+    }
+  </div>
+
+  @if (sourceOptions.length == 0 || targetOptions.length == 0) {
+    <div class="empty-state">
+      {{ texts.empty }}
+    </div>
+  } @else {
+    <div class="empty-state">
+      {{ texts.assistantCopy }}
+    </div>
+
+    <div class="template-actions">
+      <button type="button" class="ghost" (click)="createRuleTemplate.emit('porto')">Template Porto</button>
+      <button type="button" class="ghost" (click)="createRuleTemplate.emit('apolice')">Template APOLICE</button>
+      <button type="button" class="ghost" (click)="createRuleTemplate.emit('cnpjProdutor')">Template CNPJ</button>
+    </div>
+
+    <div class="rule-stats">
+      <div class="stat-chip">
+        <strong>{{ rules.length }}</strong>
+        <span>geradores</span>
+      </div>
+      <div class="stat-chip">
+        <strong>{{ totalConditions() }}</strong>
+        <span>condições</span>
+      </div>
+      <div class="stat-chip">
+        <strong>{{ totalActions() }}</strong>
+        <span>ações</span>
+      </div>
+    </div>
+
+    <div class="rule-list">
+      @if (rules.length == 0) {
+        <div class="empty-state">
+          {{ texts.empty }}
+        </div>
+      }
+
+      @for (rule of rules; track rule.id) {
+        <section class="rule-card">
+          <div class="rule-top">
+            <input
+              [ngModel]="rule.name"
+              (ngModelChange)="updateRuleName.emit({ ruleId: rule.id, value: $event })"
+              placeholder="Nome da regra visual"
+            />
+            <select
+              [ngModel]="rule.matchMode ?? 'all'"
+              (ngModelChange)="updateRuleMatchMode.emit({ ruleId: rule.id, mode: $event })"
+            >
+              <option value="all">Todas as condições (E)</option>
+              <option value="any">Qualquer condição (OU)</option>
+            </select>
+            <button type="button" class="danger" (click)="removeRule.emit(rule.id)">Excluir</button>
+          </div>
+
+          <div class="rule-badges">
+            <span>{{ rule.conditions.length }} condições</span>
+            <span>{{ rule.actions.length }} ações</span>
+            <span>{{ (rule.matchMode ?? 'all') == 'all' ? 'E' : 'OU' }}</span>
+          </div>
+
+          <div class="rule-configured">
+            <div class="configured-block">
+              <span class="configured-title">Condições configuradas</span>
+              <div class="configured-chips">
+                @for (item of conditionSummary(rule); track item) {
+                  <span class="configured-chip">{{ item }}</span>
+                }
+              </div>
+            </div>
+            <div class="configured-block">
+              <span class="configured-title">Ações configuradas</span>
+              <div class="configured-chips">
+                @for (item of actionSummary(rule); track item) {
+                  <span class="configured-chip configured-chip-action">{{ item }}</span>
+                }
+              </div>
+            </div>
+          </div>
+
+          <div class="rule-grid">
+            <div class="rule-block">
+              <h3>Se</h3>
+              @for (condition of rule.conditions; track condition.id) {
+                <div class="rule-line">
+                  <select
+                    [ngModel]="condition.scope"
+                    (ngModelChange)="updateCondition.emit({ ruleId: rule.id, conditionId: condition.id, patch: { scope: $event } })"
+                  >
+                    <option value="source">Entrada</option>
+                    <option value="target">Saída</option>
+                  </select>
+
+                  <select
+                    [ngModel]="condition.fieldPath"
+                    (ngModelChange)="updateCondition.emit({ ruleId: rule.id, conditionId: condition.id, patch: { fieldPath: $event } })"
+                  >
+                    @for (option of condition.scope == 'source' ? sourceOptions : targetOptions; track option.id) {
+                      <option [value]="option.path">{{ option.displayPath }}</option>
+                    }
+                  </select>
+
+                  <select
+                    [ngModel]="condition.operator"
+                    (ngModelChange)="updateCondition.emit({ ruleId: rule.id, conditionId: condition.id, patch: { operator: $event } })"
+                  >
+                    @for (operator of operators; track operator) {
+                      <option [value]="operator">{{ operator }}</option>
+                    }
+                  </select>
+
+                  <input
+                    [ngModel]="condition.value"
+                    (ngModelChange)="updateCondition.emit({ ruleId: rule.id, conditionId: condition.id, patch: { value: $event } })"
+                    placeholder="5, Porto, true..."
+                  />
+
+                  <button
+                    type="button"
+                    class="ghost"
+                    (click)="removeCondition.emit({ ruleId: rule.id, conditionId: condition.id })"
+                  >
+                    ×
+                  </button>
+                </div>
+
+                <div class="preset-row">
+                  <span class="preset-label">Atalhos de preenchimento</span>
+                  <button
+                    type="button"
+                    class="ghost"
+                    (click)="applyConditionPreset(rule.id, condition.id, { fieldPath: '$.dadosApolice.ramo', operator: '==', value: '5' })"
+                  >
+                    ramo = 5
+                  </button>
+                  <button
+                    type="button"
+                    class="ghost"
+                    (click)="applyConditionPreset(rule.id, condition.id, { fieldPath: '$.dadosApolice.codigoMarca', operator: '==', value: '1001' })"
+                  >
+                    codigoMarca = 1001
+                  </button>
+                  <button
+                    type="button"
+                    class="ghost"
+                    (click)="applyConditionPreset(rule.id, condition.id, { fieldPath: '$.dadosApolice.numeroApolice', operator: 'exists', value: '' })"
+                  >
+                    numeroApolice existe
+                  </button>
+                </div>
+              }
+              <button type="button" class="ghost add-btn" (click)="addCondition.emit(rule.id)">+ Condição</button>
+            </div>
+
+            <div class="rule-block">
+              <h3>Então</h3>
+              @for (action of rule.actions; track action.id) {
+                <div class="action-card">
+                  <div class="rule-line">
+                    <select
+                      [ngModel]="action.scope"
+                      (ngModelChange)="updateAction.emit({ ruleId: rule.id, actionId: action.id, patch: { scope: $event } })"
+                    >
+                      <option value="target">Saída</option>
+                      <option value="source">Entrada</option>
+                    </select>
+
+                    <select
+                      [ngModel]="action.fieldPath"
+                      (ngModelChange)="updateAction.emit({ ruleId: rule.id, actionId: action.id, patch: { fieldPath: $event } })"
+                    >
+                      @for (option of action.scope == 'source' ? sourceOptions : targetOptions; track option.id) {
+                        <option [value]="option.path">{{ option.displayPath }}</option>
+                      }
+                    </select>
+
+                    <select
+                      [ngModel]="action.type"
+                      (ngModelChange)="updateAction.emit({ ruleId: rule.id, actionId: action.id, patch: { type: $event } })"
+                    >
+                      <option value="setLiteral">Definir valor</option>
+                      <option value="copyField">Copiar campo</option>
+                      <option value="setExpression">Fórmula avançada</option>
+                    </select>
+
+                    <select
+                      [ngModel]="action.applicationMode ?? 'replace'"
+                      (ngModelChange)="updateAction.emit({ ruleId: rule.id, actionId: action.id, patch: { applicationMode: $event } })"
+                    >
+                      @for (mode of actionApplicationModes; track mode.value) {
+                        <option [value]="mode.value">{{ mode.label }}</option>
+                      }
+                    </select>
+
+                    <button
+                      type="button"
+                      class="ghost"
+                      (click)="removeAction.emit({ ruleId: rule.id, actionId: action.id })"
+                    >
+                      ×
+                    </button>
+                  </div>
+
+                  @if (action.type == 'setLiteral') {
+                    <div class="preset-row">
+                      <span class="preset-label">Atalhos de valor</span>
+                      <button type="button" class="ghost" (click)="applyActionLiteralPreset(rule.id, action.id, 'Porto')">Porto</button>
+                      <button type="button" class="ghost" (click)="applyActionLiteralPreset(rule.id, action.id, 'APOLICE')">APOLICE</button>
+                      <button type="button" class="ghost" (click)="applyActionLiteralPreset(rule.id, action.id, '61199164000160')">CNPJ produtor</button>
+                    </div>
+                    <input
+                      [ngModel]="action.value"
+                      (ngModelChange)="updateAction.emit({ ruleId: rule.id, actionId: action.id, patch: { value: $event } })"
+                      placeholder="Valor fixo"
+                    />
+                  }
+
+                  @if (action.type == 'copyField') {
+                    <div class="preset-row">
+                      <span class="preset-label">Atalhos de cópia</span>
+                      <button
+                        type="button"
+                        class="ghost"
+                        (click)="applyActionCopyPreset(rule.id, action.id, '$.dadosApolice.numeroApolice')"
+                      >
+                        Copiar numeroApolice
+                      </button>
+                      <button
+                        type="button"
+                        class="ghost"
+                        (click)="applyActionCopyPreset(rule.id, action.id, '$.dadosApolice.codigoSucursal')"
+                      >
+                        Copiar codigoSucursal
+                      </button>
+                    </div>
+                    <div class="rule-line compact">
+                      <select
+                        [ngModel]="action.sourceScope"
+                        (ngModelChange)="updateAction.emit({ ruleId: rule.id, actionId: action.id, patch: { sourceScope: $event } })"
+                      >
+                        <option value="source">Entrada</option>
+                        <option value="target">Saída</option>
+                      </select>
+                      <select
+                        [ngModel]="action.sourceFieldPath"
+                        (ngModelChange)="updateAction.emit({ ruleId: rule.id, actionId: action.id, patch: { sourceFieldPath: $event } })"
+                      >
+                        @for (option of action.sourceScope == 'source' ? sourceOptions : targetOptions; track option.id) {
+                          <option [value]="option.path">{{ option.displayPath }}</option>
+                        }
+                      </select>
+                    </div>
+                  }
+
+                  @if (action.type == 'setExpression') {
+                    <textarea
+                      [ngModel]="action.expression"
+                      (ngModelChange)="updateAction.emit({ ruleId: rule.id, actionId: action.id, patch: { expression: $event } })"
+                      placeholder="concat(src('$.dadosApolice.codigoSucursal'), '-', src('$.dadosApolice.numeroApolice'))"
+                    ></textarea>
+                  }
+
+                  <div class="action-summary">
+                    <span class="action-summary-pill">
+                      Resultado no schema: {{ actionOutputMode(rule, action) == 'indefinido' ? 'pendente' : actionOutputMode(rule, action) }}
+                    </span>
+                    <span class="action-summary-mode">{{ actionApplicationLabel(action) }}</span>
+                    <strong>{{ actionSchemaSummary(rule, action) }}</strong>
+                    <small>{{ actionCurrentBindingLabel(action) }}</small>
+                    <small>{{ actionImpactSummary(rule, action) }}</small>
+
+                    @if (actionExpressionPreview(rule, action)) {
+                      <div class="expression-preview">
+                        <span>Expressão gerada</span>
+                        <code>{{ actionExpressionPreview(rule, action) }}</code>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+              <button type="button" class="ghost add-btn" (click)="addAction.emit(rule.id)">+ Ação</button>
+            </div>
+          </div>
+        </section>
+      }
+    </div>
+  }
+</section>

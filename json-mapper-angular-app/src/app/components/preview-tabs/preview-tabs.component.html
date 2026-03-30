@@ -1,0 +1,42 @@
+<section class="panel preview-panel" data-testid="preview-tabs">
+  <div class="panel-header">
+    <div class="tab-switch">
+      <button type="button" [class.active]="activeTab == 'schema'" (click)="activeTab = 'schema'">Schema</button>
+      <button type="button" [class.active]="activeTab == 'errors'" (click)="activeTab = 'errors'">Erros</button>
+    </div>
+  </div>
+
+  <div class="preview-stats">
+    <div class="stat-chip">
+      <strong>{{ lineCount(persistedDocument) }}</strong>
+      <span>linhas de schema</span>
+    </div>
+    <div class="stat-chip">
+      <strong>{{ validationErrors.length }}</strong>
+      <span>alertas</span>
+    </div>
+  </div>
+
+  @if (activeTab == 'schema') {
+    <app-json-tree-viewer
+      [content]="persistedDocument"
+      [fileName]="activeFileName()"
+      [allowExport]="true"
+      emptyMessage="Nenhum schema salvo disponível ainda."
+    />
+  }
+
+  @if (activeTab == 'errors') {
+    <div class="errors-tab">
+      @if (validationErrors.length > 0) {
+        <ul>
+          @for (error of validationErrors; track error) {
+            <li>{{ error }}</li>
+          }
+        </ul>
+      } @else {
+        <p>Nenhum erro de validação. O schema visual está consistente para publicação.</p>
+      }
+    </div>
+  }
+</section>

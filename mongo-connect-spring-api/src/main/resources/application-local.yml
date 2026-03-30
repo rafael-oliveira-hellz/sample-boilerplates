@@ -1,0 +1,25 @@
+spring:
+  config:
+    activate:
+      on-profile: local
+  data:
+    mongodb:
+      database: HUB_PARCEIROS
+      certificate:
+        path: classpath:certs/rsdevhubinparceiros.p12
+        pwd: rsdevhubinparceiros
+      host: 127.0.0.1
+      write-username: sathubparceiros_w@portoseguro.brasil
+      read-username: sathubparceiros_r@portoseguro.brasil
+      write-password: ALTERE_AQUI_WRITE
+      read-password: ALTERE_AQUI_READ
+      replica-set: rsdevhubinparceiros
+      mtls: true
+      auth-database: HUB_PARCEIROS
+      pool:
+        min-size: 5
+        max-size: 50
+        max-wait-ms: 5000
+        connect-timeout-ms: 3000
+        read-timeout-ms: 5000
+        max-connection-idle-ms: 60000

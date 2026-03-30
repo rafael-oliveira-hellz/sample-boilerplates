@@ -1,0 +1,14 @@
+﻿{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./out-tsc/app",
+    "types": []
+  },
+  "files": [
+    "apps/mfe-json-mapper/src/main.ts"
+  ],
+  "include": [
+    "apps/mfe-json-mapper/src/**/*.d.ts",
+    "libs/**/*.d.ts"
+  ]
+}

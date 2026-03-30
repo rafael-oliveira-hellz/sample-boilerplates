@@ -1,0 +1,131 @@
+application:
+  title: sboot-segu-aseg-hubin-ops
+  observability:
+    http:
+      enabled: ${APPLICATION_OBSERVABILITY_HTTP_ENABLED:true}
+      log-bodies: ${APPLICATION_OBSERVABILITY_HTTP_LOG_BODIES:false}
+      log-bodies-on-error: ${APPLICATION_OBSERVABILITY_HTTP_LOG_BODIES_ON_ERROR:true}
+      success-sample-percent: ${APPLICATION_OBSERVABILITY_HTTP_SUCCESS_SAMPLE_PERCENT:5}
+      max-payload-length: ${APPLICATION_OBSERVABILITY_HTTP_MAX_PAYLOAD_LENGTH:8192}
+      redacted-headers: [authorization, cookie, set-cookie]
+  rate-limit:
+    enabled: ${APPLICATION_RATE_LIMIT_ENABLED:true}
+    requests: ${APPLICATION_RATE_LIMIT_REQUESTS:120}
+    window-seconds: ${APPLICATION_RATE_LIMIT_WINDOW_SECONDS:60}
+  security:
+    cors:
+      allowed-origins: []
+      allowed-methods: [GET, POST, PUT, PATCH, DELETE]
+      allowed-headers: [Content-Type, Accept, Authorization, X-Request-Id, traceparent, tracestate]
+      exposed-headers: [X-Trace-Id, X-Span-Id, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, Retry-After]
+      allow-credentials: false
+      max-age-seconds: 3600
+    headers:
+      hsts-enabled: true
+    corporate-filter:
+      enabled: true
+      required: true
+      expected-class-name: com.porto.segurancadainformacao.securitytyfilter.filter.RequestSecurityFilter
+      order: 2
+      url-patterns: [/v1/*, /v2/*, /api/*]
+
+server:
+  port: 8090
+  address: 0.0.0.0
+  servlet:
+    context-path: /sboot-segu-aseg-hubin-ops
+  shutdown: graceful
+  tomcat:
+    threads:
+      max: 200
+      min-spare: 50
+    accept-count: 100
+    max-connections: 200
+    mbeanregistry:
+      enabled: false
+    util:
+      scan:
+        StandardJarScanFilter:
+          defaultTldScan: false
+    max-http-form-post-size: 26214400
+  compression:
+    enabled: true
+    mime-types: application/json,application/problem+json,text/plain
+    min-response-size: 1024
+  max-http-request-header-size: 16KB
+  error:
+    include-message: never
+    include-stacktrace: never
+    include-binding-errors: never
+
+spring:
+  application:
+    name: sboot-segu-aseg-hubin-ops
+  main:
+    allow-bean-definition-overriding: true
+    lazy-initialization: true
+    banner-mode: off
+  lifecycle:
+    timeout-per-shutdown-phase: 20s
+  threads:
+    virtual:
+      enabled: true
+  jmx:
+    enabled: false
+  data:
+    mongodb:
+      auto-index-creation: true
+      database: HUB_PARCEIROS
+      certificate:
+        path: classpath:certs/rsdevhubinparceiros.p12
+        pwd: rsdevhubinparceiros
+      host: rsdevhubinparceiros.portoseguro.brasil
+      write-username: sathubparceiros_w@portoseguro.brasil
+      read-username: sathubparceiros_r@portoseguro.brasil
+      write-password: ALTERE_AQUI_WRITE
+      read-password: ALTERE_AQUI_READ
+      replica-set: rsdevhubinparceiros
+      mtls: true
+      auth-database: HUB_PARCEIROS
+      pool:
+        min-size: 5
+        max-size: 50
+        max-wait-ms: 5000
+        connect-timeout-ms: 3000
+        read-timeout-ms: 5000
+        max-connection-idle-ms: 60000
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
+    default-property-inclusion: non_null
+  servlet:
+    multipart:
+      enabled: false
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: https://sso-interno.authcorp.dev/awsporto/auth/realms/addev/protocol/openid-connect/certs
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+      base-path: /actuator
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+  model-and-view-allowed: true
+  writer-with-default-pretty-printer: true
+
+logging:
+  level:
+    root: WARN
+    org.springframework.web: ERROR
+    org.springframework.security: ERROR
+    br.com.portoseguro: INFO

@@ -1,0 +1,27 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../out-tsc/mfe-json-mapper/app",
+    "types": [],
+    "baseUrl": "../../",
+    "paths": {
+      "@shared/contracts": [
+        "libs/shared/contracts/src/index.ts"
+      ],
+      "@shared/runtime": [
+        "libs/shared/runtime/src/index.ts"
+      ],
+      "@shared/design-system": [
+        "libs/shared/design-system/src/index.ts"
+      ]
+    }
+  },
+  "files": [
+    "src/main.ts"
+  ],
+  "include": [
+    "src/**/*.d.ts",
+    "../../libs/**/*.d.ts",
+    "src/microfront/**/*.ts"
+  ]
+}

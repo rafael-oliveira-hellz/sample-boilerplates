@@ -1,0 +1,96 @@
+<div class="technical-mode">
+  <input
+    #fileInput
+    type="file"
+    accept=".json,application/json"
+    hidden
+    (change)="onFileSelected($event)"
+  />
+
+  <div class="technical-header">
+    <div class="technical-import-card">
+      <div>
+        <strong>{{ importTitle }}</strong>
+        <p>{{ importCopy }}</p>
+      </div>
+      <div class="import-actions">
+        @if (templateHref) {
+          <button
+            type="button"
+            class="ghost subtle action-link"
+            (click)="downloadTemplate()"
+          >
+            {{ templateAction }}
+          </button>
+        }
+        <button type="button" class="ghost" (click)="openFilePicker()">{{ importAction }}</button>
+      </div>
+    </div>
+
+    <div class="technical-file-card" [class.empty]="!importedFile">
+      <div class="file-card-copy">
+        <strong>{{ importedFile?.name || noFile }}</strong>
+        <span class="file-meta-line">
+          {{ importedFile?.mimeType || 'application/json' }}
+          @if (importedFile?.sizeLabel) {
+            <ng-container> · {{ importedFile?.sizeLabel }}</ng-container>
+          }
+          @if (importedFile?.extension) {
+            <ng-container> · .{{ importedFile?.extension }}</ng-container>
+          }
+        </span>
+      </div>
+      @if (importedFile) {
+        <button type="button" class="ghost subtle" (click)="clearFileRequested.emit()">{{ clearFile }}</button>
+      }
+    </div>
+  </div>
+
+  <div class="technical-editor-card">
+    <div class="technical-editor-head">
+      <div>
+        <strong>{{ editorTitle }}</strong>
+        <p>{{ editorCopy }}</p>
+      </div>
+      <div class="editor-mode-switch">
+        <button type="button" class="ghost" [class.active]="panelMode == 'viewer'" (click)="setPanelMode('viewer')">
+          {{ viewerMode }}
+        </button>
+        <button type="button" class="ghost" [class.active]="panelMode == 'editor'" (click)="setPanelMode('editor')">
+          {{ editorMode }}
+        </button>
+      </div>
+    </div>
+
+    @if (panelMode == 'viewer') {
+      <app-json-tree-viewer
+        [content]="rawJsonText"
+        [showToolbar]="true"
+        [allowExport]="false"
+        [minHeight]="360"
+        [emptyMessage]="viewerEmpty"
+      />
+    } @else {
+      <app-code-editor
+        [fileName]="fileName"
+        language="json"
+        [minHeight]="360"
+        [value]="rawJsonText"
+        [placeholder]="placeholder"
+        [helperText]="helperText"
+        (valueChange)="rawJsonTextChange.emit($event)"
+      />
+      <div class="technical-editor-actions">
+        <button type="button" (click)="applyText.emit()">{{ editorAction }}</button>
+      </div>
+    }
+  </div>
+
+  <div class="technical-footnote">
+    <span>{{ editorFootnote }}</span>
+  </div>
+
+  @if (error) {
+    <p class="status error">{{ error }}</p>
+  }
+</div>

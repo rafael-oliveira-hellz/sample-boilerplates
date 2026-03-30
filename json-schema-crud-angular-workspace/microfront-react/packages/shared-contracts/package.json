@@ -1,0 +1,12 @@
+{
+  "name": "@porto/shared-contracts",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "node -e \"console.log('shared-contracts: types only')\""
+  }
+}

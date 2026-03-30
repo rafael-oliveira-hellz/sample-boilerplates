@@ -1,0 +1,57 @@
+<div class="viewer-shell" [style.min-height.px]="minHeight">
+  @if (showToolbar) {
+    <div class="viewer-toolbar">
+      <button type="button" (click)="expandAll()">Expandir tudo</button>
+      <button type="button" class="ghost" (click)="collapseAll()">Recolher tudo</button>
+      <button type="button" class="ghost" (click)="copyContent()">Copiar JSON</button>
+      @if (allowExport) {
+        <button type="button" class="ghost" (click)="exportContent()">Exportar JSON</button>
+      }
+    </div>
+  }
+
+  @if (tree(); as parsedTree) {
+    <div class="json-viewer-shell">
+      <ng-container *ngTemplateOutlet="jsonNodeTemplate; context: { $implicit: parsedTree, depth: 0 }"></ng-container>
+    </div>
+  } @else if (content) {
+    <pre>{{ content }}</pre>
+  } @else {
+    <div class="empty-viewer">{{ emptyMessage }}</div>
+  }
+</div>
+
+<ng-template #jsonNodeTemplate let-node let-depth="depth">
+  <div class="json-node" [style.--depth]="depth">
+    <div class="json-row" [class.collapsible]="node.children?.length">
+      @if (node.children?.length) {
+        <button type="button" class="json-toggle" (click)="toggleNode(node.path)">
+          {{ isCollapsed(node.path) ? '▸' : '▾' }}
+        </button>
+      } @else {
+        <span class="json-toggle ghost">•</span>
+      }
+
+      <span class="json-key">{{ node.key == 'root' ? 'root' : node.key }}</span>
+      <span class="json-colon">:</span>
+      <span class="json-type-pill">{{ valueTypeLabel(node) }}</span>
+      @if (evalBadgeLabel(node); as badge) {
+        <span class="json-eval-badge" [attr.data-tone]="evalBadgeTone(node)">{{ badge }}</span>
+      }
+
+      @if (node.children?.length) {
+        <span class="json-preview">{{ isCollapsed(node.path) ? node.preview : '' }}</span>
+      } @else {
+        <span class="json-value" [attr.data-type]="node.type">{{ node.value }}</span>
+      }
+    </div>
+
+    @if (node.children?.length && !isCollapsed(node.path)) {
+      <div class="json-children">
+        @for (child of node.children; track trackNode($index, child)) {
+          <ng-container *ngTemplateOutlet="jsonNodeTemplate; context: { $implicit: child, depth: depth + 1 }"></ng-container>
+        }
+      </div>
+    }
+  </div>
+</ng-template>

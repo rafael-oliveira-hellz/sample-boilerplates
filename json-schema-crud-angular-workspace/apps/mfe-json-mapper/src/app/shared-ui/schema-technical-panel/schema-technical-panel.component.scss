@@ -1,0 +1,203 @@
+:host {
+  display: block;
+}
+
+.technical-mode {
+  display: grid;
+  gap: 14px;
+}
+
+.technical-header {
+  display: grid;
+  gap: 12px;
+}
+
+.technical-import-card,
+.technical-file-card,
+.technical-editor-card {
+  border: 1px solid var(--porto-border);
+  border-radius: 24px;
+  background: linear-gradient(180deg, #ffffff 0%, #f4f9fd 100%);
+  box-shadow: 0 14px 32px rgba(0, 62, 126, 0.05);
+}
+
+.technical-import-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px;
+}
+
+.import-actions {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.technical-import-card strong,
+.technical-file-card strong,
+.technical-editor-head strong {
+  display: block;
+  color: var(--porto-text);
+}
+
+.technical-import-card p,
+.technical-editor-head p {
+  margin: 6px 0 0;
+  color: var(--porto-text-soft);
+  line-height: 1.5;
+}
+
+.technical-file-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  padding: 16px 20px;
+  min-height: 96px;
+}
+
+.technical-file-card.empty {
+  border-style: dashed;
+  background: #fbfdff;
+}
+
+.file-card-copy {
+  display: grid;
+  gap: 4px;
+}
+
+.file-card-copy span,
+.technical-footnote {
+  color: var(--porto-text-soft);
+  font-size: 13px;
+}
+
+.file-meta-line {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.technical-file-card .ghost,
+.technical-import-card .ghost,
+.technical-import-card .action-link,
+.editor-mode-switch .ghost,
+.technical-editor-actions button {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.technical-file-card .ghost,
+.technical-import-card .ghost,
+.technical-import-card .action-link,
+.editor-mode-switch .ghost {
+  background: #edf7fd;
+  color: var(--porto-navy);
+  box-shadow: none;
+}
+
+.technical-import-card .ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 196px;
+  background: linear-gradient(135deg, #edf7fd 0%, #e1f1fb 100%);
+}
+
+.technical-import-card .action-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 180px;
+}
+
+.subtle {
+  white-space: nowrap;
+}
+
+.technical-editor-card {
+  padding: 18px 20px 20px;
+  display: grid;
+  gap: 14px;
+}
+
+.technical-editor-card app-code-editor,
+.technical-editor-card app-json-tree-viewer {
+  display: block;
+  min-height: 360px;
+}
+
+.technical-editor-placeholder {
+  min-height: 360px;
+  display: grid;
+  place-items: center;
+  border-radius: 20px;
+  border: 1px dashed var(--porto-border);
+  background: linear-gradient(180deg, #fbfdff 0%, #f2f8fc 100%);
+  color: var(--porto-text-soft);
+  font-weight: 600;
+}
+
+.technical-editor-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.editor-mode-switch {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: #edf7fd;
+}
+
+.editor-mode-switch button {
+  transition: background 140ms ease, color 140ms ease, transform 140ms ease;
+}
+
+.editor-mode-switch button.active {
+  background: var(--porto-navy);
+  color: #fff;
+}
+
+.technical-editor-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.technical-editor-actions button {
+  background: linear-gradient(135deg, var(--porto-navy) 0%, var(--porto-blue-strong) 100%);
+  color: #fff;
+  box-shadow: 0 10px 22px rgba(0, 62, 126, 0.12);
+}
+
+.status.error {
+  color: #a03a4d;
+  margin: 0;
+}
+
+@media (max-width: 900px) {
+  .technical-import-card,
+  .technical-file-card,
+  .technical-editor-head {
+    grid-template-columns: 1fr;
+    display: grid;
+  }
+
+  .editor-mode-switch,
+  .technical-file-card .ghost,
+  .technical-import-card .ghost {
+    justify-self: start;
+  }
+}

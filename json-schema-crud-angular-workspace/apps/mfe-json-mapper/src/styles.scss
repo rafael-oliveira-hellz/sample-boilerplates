@@ -1,0 +1,243 @@
+﻿@use '../../../libs/shared/design-system/src/styles/porto-design-tokens';
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background:
+    radial-gradient(circle at top left, rgba(19, 120, 179, 0.16), transparent 30%),
+    radial-gradient(circle at top right, rgba(244, 146, 66, 0.2), transparent 28%),
+    linear-gradient(180deg, #f7f9fc 0%, #eef3f8 100%);
+  color: #163047;
+}
+
+body {
+  min-height: 100vh;
+  font-family: inherit;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+button,
+a,
+[role='button'],
+.mode-pill,
+.badge,
+.tab-switch button {
+  cursor: pointer;
+}
+
+button {
+  appearance: none;
+  border: 0;
+  transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease, border-color 140ms ease;
+}
+
+button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid rgba(0, 160, 223, 0.2);
+  outline-offset: 2px;
+}
+
+app-mapping-workbench {
+  .panel {
+    padding: 24px;
+    border-radius: 28px;
+    background: rgba(255, 255, 255, 0.97);
+    box-shadow: 0 20px 48px rgba(16, 38, 56, 0.08);
+  }
+
+  .panel-header {
+    margin-bottom: 18px;
+  }
+
+  .panel-kicker {
+    margin: 0 0 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--porto-blue-strong);
+    font-size: 12px;
+  }
+
+  h2,
+  .panel-copy,
+  h3,
+  p {
+    margin: 0;
+  }
+
+  .panel-copy {
+    margin-top: 8px;
+    color: #68839b;
+    line-height: 1.5;
+  }
+
+  .summary-card,
+  .editor-card,
+  .errors-card,
+  .suggestion-card,
+  .flow-card,
+  .assistants-card {
+    padding: 16px 18px;
+    border-radius: 22px;
+    background: #f8fbfe;
+    border: 1px solid #dce8f0;
+  }
+
+  .flow-card {
+    margin-bottom: 14px;
+    background: linear-gradient(180deg, #fcfeff 0%, #f3f8fc 100%);
+  }
+
+  .flow-card strong {
+    color: #1a3a55;
+  }
+
+  .flow-card ol {
+    margin: 10px 0 0;
+    padding-left: 18px;
+    display: grid;
+    gap: 6px;
+    color: #5d7a90;
+  }
+
+  .summary-card {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+
+  .summary-card.compact {
+    margin-bottom: 0;
+  }
+
+  .quick-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+
+  .review-nav {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .review-card {
+    display: grid;
+    gap: 8px;
+    align-content: start;
+    min-height: 124px;
+    padding: 14px 16px;
+    border-radius: 18px;
+    background: #fbfdff;
+    border: 1px solid #dce8f0;
+  }
+
+  .review-card strong {
+    font-size: 24px;
+  }
+
+  .review-card span {
+    color: #68839b;
+    font-size: 13px;
+  }
+
+  .review-card small {
+    color: #7b93a7;
+    line-height: 1.45;
+  }
+
+  .summary-card strong {
+    font-size: 28px;
+  }
+
+  .summary-pills {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .mapping-list {
+    display: grid;
+    gap: 10px;
+    max-height: 220px;
+    overflow: auto;
+  }
+
+  .mapping-item {
+    display: grid;
+    gap: 4px;
+    padding: 14px 16px;
+    border-radius: 18px;
+    border: 1px solid #d8e6ee;
+    background: #fff;
+    cursor: pointer;
+    text-align: left;
+    color: #173148;
+    transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+  }
+
+  .mapping-item:hover {
+    transform: translateY(-1px);
+    border-color: #8ab4cd;
+    box-shadow: 0 10px 24px rgba(16, 38, 56, 0.08);
+  }
+
+  .mapping-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .mode-pill,
+  .type-pill {
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: #e7f0f7;
+    color: #335a79;
+    font-size: 12px;
+  }
+
+  .mode-pill.subtle {
+    background: #f2f7fb;
+  }
+
+  .editor-card {
+    display: grid;
+    gap: 14px;
+  }
+
+  .node-intro {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .node-intro p,
+  small {
+    color: #6c879d;
+  }
+}
+

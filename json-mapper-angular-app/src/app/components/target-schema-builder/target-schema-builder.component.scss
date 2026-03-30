@@ -1,0 +1,221 @@
+:host {
+  display: block;
+  height: 100%;
+  min-height: 0;
+}
+
+.tree-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.selection-card {
+  background: linear-gradient(180deg, #fbfdff 0%, #f4fbf7 100%);
+}
+
+.drop-banner {
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: #edf7fd;
+  color: var(--porto-text-soft);
+  border: 1px dashed transparent;
+}
+
+.drop-banner.active {
+  background: #eef9ff;
+  color: var(--porto-navy);
+  border-color: rgba(245, 130, 32, 0.45);
+}
+
+.node-card {
+  position: relative;
+  cursor: pointer;
+  padding: 16px 18px;
+}
+
+.fan-in-ports {
+  position: absolute;
+  left: -18px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  gap: 8px;
+  z-index: 2;
+}
+
+.fan-in-port {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 2px solid var(--porto-orange);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #b05d14;
+  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease, opacity 160ms ease, border-color 160ms ease;
+}
+
+.fan-in-port.highlighted {
+  background: var(--porto-orange);
+  color: #fff;
+  transform: scale(1.14);
+  box-shadow: 0 0 0 4px rgba(245, 130, 32, 0.18);
+}
+
+.fan-in-port.dimmed {
+  opacity: 0.42;
+}
+
+.tree-row.selected .node-card {
+  border-color: var(--porto-blue-strong);
+  box-shadow: 0 0 0 3px rgba(0, 160, 223, 0.14);
+  transform: translateX(2px);
+}
+
+.tree-row.mapped .node-card {
+  background: #f3fbff;
+  border-color: #9ed4ee;
+}
+
+.tree-row.empty-state .node-card {
+  background: #fff9f0;
+  border-color: #f3c48b;
+}
+
+.tree-row.rule-state .node-card {
+  background: #eef8ff;
+  border-color: #8ecff2;
+}
+
+.tree-row.error-state .node-card {
+  background: #fff2f3;
+  border-color: #e3a4ad;
+}
+
+.tree-row.drop-ready .node-card:hover {
+  border-color: var(--porto-orange);
+  box-shadow: 0 0 0 3px rgba(245, 130, 32, 0.16), 0 8px 18px rgba(0, 62, 126, 0.08);
+}
+
+.tree-row.drop-hover .node-card {
+  transform: scale(1.006);
+  box-shadow: 0 0 0 4px rgba(42, 124, 176, 0.14), 0 12px 24px rgba(18, 64, 92, 0.08);
+}
+
+.tree-row.drop-alias .node-card {
+  border-color: var(--porto-blue);
+  background: linear-gradient(180deg, #f7fcff 0%, #eef8ff 100%);
+}
+
+.tree-row.drop-concat .node-card {
+  border-color: var(--porto-orange);
+  background: linear-gradient(180deg, #fffdf8 0%, #fff4e8 100%);
+}
+
+.tree-row.drop-append .node-card {
+  box-shadow: 0 0 0 4px rgba(245, 130, 32, 0.15), 0 18px 34px rgba(0, 62, 126, 0.12);
+}
+
+.tree-row.drop-overwrite .node-card {
+  border-color: #cc6f2b;
+  background: linear-gradient(180deg, #fff8f2 0%, #ffefe1 100%);
+  box-shadow: 0 0 0 4px rgba(204, 111, 43, 0.16), 0 18px 34px rgba(18, 64, 92, 0.12);
+}
+
+.tree-row.drop-noop .node-card {
+  border-color: #8fa5b6;
+  background: linear-gradient(180deg, #fafcff 0%, #f3f8fb 100%);
+  box-shadow: 0 0 0 4px rgba(143, 165, 182, 0.14), 0 18px 34px rgba(18, 64, 92, 0.08);
+}
+
+.tree-row.drop-new-child .node-card {
+  border-color: var(--porto-orange);
+  background: linear-gradient(180deg, #fffdf6 0%, #fff6e7 100%);
+}
+
+.drop-intent-chip {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 6px;
+  justify-self: start;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: rgba(0, 160, 223, 0.08);
+  color: var(--porto-navy);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.drop-effect-pill {
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.75);
+  color: #184c6b;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.edit-chip.icon-only:hover {
+  background: #dcecf8;
+  box-shadow: 0 0 0 2px rgba(28, 101, 143, 0.14);
+}
+
+.map-badge,
+.empty-badge,
+.rule-badge,
+.error-badge {
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+
+.map-badge {
+  background: #e4f7ff;
+  color: var(--porto-navy);
+}
+
+.empty-badge {
+  background: var(--porto-orange-soft);
+  color: #8b5a11;
+}
+
+.rule-badge {
+  background: #e5f5ff;
+  color: var(--porto-blue-strong);
+}
+
+.error-badge {
+  background: #f8d9dd;
+  color: #922f41;
+}
+
+.guide-card {
+  margin-bottom: 14px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 1px solid #d7e6f1;
+  background: linear-gradient(180deg, #fbfdff 0%, #f3f8fc 100%);
+  color: #5f7a90;
+}
+
+.guide-card strong {
+  display: block;
+  margin-bottom: 8px;
+  color: #1c4664;
+}
+
+.guide-card ol {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 6px;
+}

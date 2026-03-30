@@ -1,0 +1,36 @@
+{
+  "name": "microfront-react",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:host": "npm run dev --workspace @porto/host-shell-react",
+    "dev:mfe": "npm run dev --workspace @porto/mfe-json-mapper-react",
+    "build": "npm run build --workspace @porto/shared-contracts && npm run build --workspace @porto/shared-runtime && npm run build --workspace @porto/shared-design-system && npm run build --workspace @porto/mfe-json-mapper-react && npm run build --workspace @porto/host-shell-react",
+    "build:host": "npm run build --workspace @porto/host-shell-react",
+    "build:mfe": "npm run build --workspace @porto/mfe-json-mapper-react",
+    "test": "vitest run",
+    "test:unit": "vitest run",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@originjs/vite-plugin-federation": "^1.4.1",
+    "@playwright/test": "^1.54.2",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "@types/react": "^19.1.2",
+    "@types/react-dom": "^19.1.2",
+    "@vitejs/plugin-react": "^5.0.0",
+    "jsdom": "^26.0.0",
+    "typescript": "^5.8.2",
+    "vite": "^6.2.2",
+    "vitest": "^3.0.8"
+  }
+}

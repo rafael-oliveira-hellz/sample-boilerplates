@@ -1,0 +1,26 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../out-tsc/mfe-json-mapper/spec",
+    "types": [
+      "jasmine"
+    ],
+    "baseUrl": "../../",
+    "paths": {
+      "@shared/contracts": [
+        "libs/shared/contracts/src/index.ts"
+      ],
+      "@shared/runtime": [
+        "libs/shared/runtime/src/index.ts"
+      ],
+      "@shared/design-system": [
+        "libs/shared/design-system/src/index.ts"
+      ]
+    }
+  },
+  "include": [
+    "src/**/*.spec.ts",
+    "src/**/*.d.ts",
+    "../../libs/**/*.d.ts"
+  ]
+}

@@ -1,0 +1,32 @@
+<div class="code-editor-shell" [style.--editor-min-height.px]="minHeight">
+  <div class="code-editor-topbar">
+    <span class="code-dot red"></span>
+    <span class="code-dot amber"></span>
+    <span class="code-dot green"></span>
+    <strong>{{ fileName }}</strong>
+    <small>darcula</small>
+  </div>
+
+  @if (useFallback) {
+    <div class="code-editor-body">
+      <div class="code-gutter" aria-hidden="true">
+        @for (line of lineNumbers; track line) {
+          <span>{{ line }}</span>
+        }
+      </div>
+      <textarea
+        class="code-textarea"
+        [value]="value"
+        [placeholder]="placeholder"
+        spellcheck="false"
+        (input)="onFallbackInput($event)"
+      ></textarea>
+    </div>
+  } @else {
+    <div #monacoHost class="monaco-host"></div>
+  }
+
+  @if (helperText) {
+    <div class="code-editor-footnote">{{ helperText }}</div>
+  }
+</div>

@@ -1,0 +1,633 @@
+<section class="panel workbench" data-testid="mapping-workbench">
+  <div class="panel-header">
+    <div>
+      <p class="panel-kicker">Inspector</p>
+      <h2>{{ texts.panelTitle }}</h2>
+      <p class="panel-copy">{{ texts.panelCopy }}</p>
+    </div>
+  </div>
+
+  <div class="flow-card">
+    <strong>{{ texts.flowTitle }}</strong>
+    <ol>
+      <li>{{ texts.flowItem1 }}</li>
+      <li>{{ texts.flowItem2 }}</li>
+      <li>{{ texts.flowItem3 }}</li>
+    </ol>
+  </div>
+
+  <div class="review-nav">
+    <div class="review-card">
+      <strong>{{ reviewCounts.empty }}</strong>
+      <span>{{ texts.emptyReview }}</span>
+      <small>{{ texts.reviewHelp }}</small>
+    </div>
+    <div class="review-card">
+      <strong>{{ reviewCounts.rule }}</strong>
+      <span>{{ texts.visualGenerators }}</span>
+      <small>{{ texts.reviewHelp }}</small>
+    </div>
+    <div class="review-card">
+      <strong>{{ reviewCounts.error }}</strong>
+      <span>{{ texts.errors }}</span>
+      <small>{{ texts.reviewHelp }}</small>
+    </div>
+  </div>
+
+  <div class="editor-card">
+    @if (selectedTargetNode; as node) {
+      <div class="node-intro">
+        <div>
+          <h3>{{ node.displayPath }}</h3>
+          <p>{{ node.kind == 'field' ? texts.selectedField : texts.selectedContainer }}</p>
+        </div>
+        <span class="type-pill">{{ node.type }}</span>
+      </div>
+
+      <div class="summary-card compact">
+        <div>
+          <strong>{{ mappedTargets.length }}</strong>
+          <span>{{ texts.configuredFields }}</span>
+        </div>
+        <div class="summary-pills">
+          <span class="mode-pill subtle">alias {{ mappingsByMode('alias') }}</span>
+          <span class="mode-pill subtle">concat {{ mappingsByMode('concat') }}</span>
+          <span class="mode-pill subtle">default {{ mappingsByMode('defaultLiteral') + mappingsByMode('defaultSource') }}</span>
+          <span class="mode-pill subtle">gera eval/script {{ ruleCount }}</span>
+        </div>
+      </div>
+
+      @if (selectedSourceLabels().length > 0) {
+        <div class="source-strip">
+          @for (label of selectedSourceLabels(); track label) {
+            <span>{{ label }}</span>
+          }
+        </div>
+      }
+
+      @if (node.kind == 'field') {
+        @if (selectedTargetHasVisualRule) {
+          <div class="binding-block info">
+            {{ texts.visualRuleInfoPrefix }} {{ selectedTargetRuleCount }} {{ texts.visualRuleInfoMiddle }}
+            <strong>eval</strong> no payload final. Se a composicao ficar complexa demais para um eval unico, o sistema salva como
+            <strong>script</strong> {{ texts.visualRuleInfoSuffix }}
+          </div>
+        }
+
+        <div class="mode-grid">
+          @for (mode of bindingModes; track mode.id) {
+            <button
+              type="button"
+              class="mode-btn"
+              [attr.data-testid]="'binding-mode-' + mode.id"
+              [class.active]="node.binding?.mode == mode.id"
+              (click)="setBindingMode.emit(mode.id)"
+            >
+              {{ mode.label }}
+            </button>
+          }
+        </div>
+
+        <div class="assistants-card">
+          <div class="assistants-head">
+            <div>
+              <strong>{{ texts.assistantsTitle }}</strong>
+              <small>{{ texts.assistantsCopy }}</small>
+            </div>
+            <button type="button" class="ghost" (click)="toggleAssistants()">
+              {{ assistantsExpanded ? texts.assistantsClose : texts.assistantsOpen }}
+            </button>
+          </div>
+        </div>
+
+        @if (assistantsExpanded) {
+          <div class="quick-actions">
+            <button type="button" (click)="applySuggestedMapping.emit()">{{ texts.bestSuggestion }}</button>
+            <button type="button" class="ghost" (click)="applySuggestedMappingsBatch.emit()">{{ texts.autoMap }}</button>
+          </div>
+
+          @if (suggestedSources().length > 0) {
+            <div class="suggestion-card">
+              <div class="suggestion-head">
+                <strong>{{ texts.suggestionsTitle }}</strong>
+                <small>{{ suggestionHint() }}</small>
+              </div>
+
+              <div class="suggestion-list">
+                @for (source of suggestedSources(); track source.id) {
+                  <button
+                    type="button"
+                    class="ghost suggestion-btn"
+                    (click)="node.binding?.mode == 'concat'
+                      ? addConcatSource.emit(source.path)
+                      : node.binding?.mode == 'defaultSource'
+                        ? setDefaultSource.emit(source.path)
+                        : setAliasSource.emit(source.path)"
+                  >
+                    <span>{{ source.displayPath }}</span>
+                    <small>{{ source.type }}</small>
+                  </button>
+                }
+              </div>
+            </div>
+          }
+
+          <div class="manual-link-card">
+            <div class="manual-link-head">
+              <div>
+                <strong>{{ texts.linkBuilderTitle }}</strong>
+                <small>{{ texts.linkBuilderCopy }}</small>
+              </div>
+            </div>
+
+            <div class="binding-block">
+              <label>{{ texts.manualSearchLabel }}</label>
+              <input
+                [(ngModel)]="manualSourceQuery"
+                [placeholder]="texts.manualSearchPlaceholder"
+              />
+
+              <div class="manual-source-list">
+                @for (source of filteredManualSources(); track source.id) {
+                  <button
+                    type="button"
+                    class="ghost manual-source-btn"
+                    draggable="true"
+                    (dragstart)="startWorkbenchDrag(source.path)"
+                    (dragend)="clearWorkbenchDrag()"
+                    (click)="useManualSuggestion(source.path)"
+                  >
+                    <span>{{ source.displayPath }}</span>
+                    <small>{{ source.type }}</small>
+                  </button>
+                }
+              </div>
+
+              <div class="link-builder-frame" #linkBuilderFrame (dragover)="trackLinkPointer($event)">
+                @if (showLinkOverlay()) {
+                  <svg class="link-overlay" [attr.viewBox]="linkOverlayViewBox()" preserveAspectRatio="none" aria-hidden="true">
+                    <path class="link-overlay-path" [attr.d]="linkOverlayPath()" />
+                    <circle class="link-overlay-end" [attr.cx]="linkOverlayEndX()" [attr.cy]="linkOverlayEndY()" r="7" />
+                  </svg>
+                }
+
+                <div class="link-canvas">
+                  <div class="link-canvas-source" data-link-source-anchor>
+                    <span class="canvas-label">{{ texts.sourceFocus }}</span>
+                    <strong>{{ draftManualSourcePath || currentDragPath() || texts.emptyFocusedSource }}</strong>
+                    <small>{{ texts.sourceFocusCopy }}</small>
+                  </div>
+
+                  <div class="link-canvas-target" data-link-target-anchor>
+                    <span class="canvas-label">{{ texts.targetSelected }}</span>
+                    <strong>{{ node.displayPath }}</strong>
+                    <small>{{ texts.targetFocusCopy }}</small>
+                  </div>
+                </div>
+
+                <div class="link-lanes">
+                  <div
+                    class="link-lane"
+                    data-link-lane="alias"
+                    [class.ready]="!!currentDragPath()"
+                    [class.hovered]="hoveredLinkLane == 'alias'"
+                    (dragover)="$event.preventDefault(); trackLinkPointer($event); activateLane('alias')"
+                    (dragleave)="clearLane('alias')"
+                    (drop)="dropOnLane('alias')"
+                  >
+                    <strong>Alias principal</strong>
+                    <small>{{ laneDescription('alias') }}</small>
+                  </div>
+                  <div
+                    class="link-lane"
+                    data-link-lane="concat"
+                    [class.ready]="!!currentDragPath()"
+                    [class.hovered]="hoveredLinkLane == 'concat'"
+                    (dragover)="$event.preventDefault(); trackLinkPointer($event); activateLane('concat')"
+                    (dragleave)="clearLane('concat')"
+                    (drop)="dropOnLane('concat')"
+                  >
+                    <strong>Concat</strong>
+                    <small>{{ laneDescription('concat') }}</small>
+                  </div>
+                  <div
+                    class="link-lane"
+                    data-link-lane="defaultSource"
+                    [class.ready]="!!currentDragPath()"
+                    [class.hovered]="hoveredLinkLane == 'defaultSource'"
+                    (dragover)="$event.preventDefault(); trackLinkPointer($event); activateLane('defaultSource')"
+                    (dragleave)="clearLane('defaultSource')"
+                    (drop)="dropOnLane('defaultSource')"
+                  >
+                    <strong>Default da origem</strong>
+                    <small>{{ laneDescription('defaultSource') }}</small>
+                  </div>
+                  <div
+                    class="link-lane"
+                    data-link-lane="fallback"
+                    [class.ready]="!!currentDragPath()"
+                    [class.hovered]="hoveredLinkLane == 'fallback'"
+                    (dragover)="$event.preventDefault(); trackLinkPointer($event); activateLane('fallback')"
+                    (dragleave)="clearLane('fallback')"
+                    (drop)="dropOnLane('fallback')"
+                  >
+                    <strong>Fallback</strong>
+                    <small>{{ laneDescription('fallback') }}</small>
+                  </div>
+                </div>
+              </div>
+
+              <label>{{ texts.manualPathLabel }}</label>
+              <input
+                [(ngModel)]="draftManualSourcePath"
+                [placeholder]="texts.manualPathPlaceholder"
+              />
+
+              <div class="manual-actions">
+                <button type="button" [disabled]="!draftManualSourcePath.trim()" (click)="applyManualSource('alias')">{{ texts.useAsAlias }}</button>
+                <button type="button" class="ghost" [disabled]="!draftManualSourcePath.trim()" (click)="applyManualSource('concat')">{{ texts.addToConcat }}</button>
+                <button type="button" class="ghost" [disabled]="!draftManualSourcePath.trim()" (click)="applyManualSource('defaultSource')">{{ texts.useAsDefault }}</button>
+                <button type="button" class="ghost" [disabled]="!draftManualSourcePath.trim()" (click)="applyManualSource('fallback')">{{ texts.addFallback }}</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="mapping-list">
+            @for (mapping of mappedTargets; track trackMapping($index, mapping)) {
+              <button type="button" class="mapping-item" (click)="selectTarget.emit(mapping.targetNodeId)">
+                <span class="mapping-head">
+                  <strong>{{ mapping.targetPath }}</strong>
+                  <span class="mode-pill">{{ mapping.mode }}</span>
+                </span>
+                <small>{{ mapping.summary }}</small>
+              </button>
+            }
+            @if (mappedTargets.length == 0) {
+              <p class="empty-hint">{{ texts.mappedEmpty }}</p>
+            }
+          </div>
+        }
+
+        @if (node.binding?.mode == 'alias') {
+          <div class="binding-block">
+            <label>Origem principal</label>
+            <select
+              [ngModel]="node.binding?.sourcePaths?.[0] ?? ''"
+              (ngModelChange)="setAliasSource.emit($event)"
+            >
+              <option value="">Selecione um campo da origem</option>
+              @for (source of sourceOptions; track source.id) {
+                <option [value]="source.path">{{ sourceOptionLabel(source, node) }}</option>
+              }
+            </select>
+
+            <label>Estrategia de fallback</label>
+            <select
+              [ngModel]="node.binding?.aliasStrategy ?? 'fallback'"
+              (ngModelChange)="updateAliasStrategy.emit($event)"
+            >
+              <option value="fallback">Primeiro valor disponivel</option>
+              <option value="first">Sempre primeiro alias</option>
+            </select>
+
+            @if ((node.binding?.sourcePaths?.length ?? 0) > 1) {
+              <div class="segment-list">
+                @for (path of (node.binding?.sourcePaths ?? []).slice(1); track $index) {
+                  <div class="segment-row alias-row">
+                    <select
+                      [ngModel]="path"
+                      (ngModelChange)="replaceAliasFallback.emit({ index: $index + 1, path: $event })"
+                    >
+                      @for (source of sourceOptions; track source.id) {
+                        <option [value]="source.path">{{ sourceOptionLabel(source, node) }}</option>
+                      }
+                    </select>
+                    <button type="button" class="danger" (click)="removeAliasFallback.emit($index + 1)">x</button>
+                  </div>
+                }
+              </div>
+            }
+
+            <div class="add-row">
+              <select [(ngModel)]="draftAliasFallback">
+                <option value="">Adicionar alias de fallback</option>
+                @for (source of sourceOptions; track source.id) {
+                  <option [value]="source.path">{{ sourceOptionLabel(source, node) }}</option>
+                }
+              </select>
+              <button type="button" [disabled]="!draftAliasFallback" (click)="draftAliasFallback && addAliasFallback.emit(draftAliasFallback)">
+                Adicionar
+              </button>
+            </div>
+          </div>
+        }
+
+        @if (node.binding?.mode == 'concat') {
+          <div class="binding-block">
+            <label>Segmentos</label>
+            @if (draggingConcatIndex !== null) {
+              <div class="concat-drag-hint" aria-live="polite">
+                {{ concatDropPreviewLabel() }}
+              </div>
+            }
+            <div class="segment-list">
+              @if ((node.binding?.sourcePaths?.length ?? 0) > 0) {
+                <div
+                  class="segment-slot"
+                  [class.visible]="draggingConcatIndex !== null"
+                  [class.active]="isConcatDropPreview(0)"
+                  (dragover)="$event.preventDefault(); previewConcatDrop(0)"
+                  (dragleave)="clearConcatDropPreview(0)"
+                  (drop)="dropConcatAt(0)"
+                >
+                  <span>Inserir no inicio</span>
+                </div>
+              }
+              @for (path of node.binding?.sourcePaths ?? []; track $index) {
+                <div
+                  class="segment-card"
+                  [class.hovered]="hoveredConcatSegmentIndex == $index"
+                  [class.dimmed]="hoveredConcatSegmentIndex !== null && hoveredConcatSegmentIndex != $index"
+                  [class.drag-source]="draggingConcatIndex == $index"
+                  [class.drop-preview]="isConcatDropPreview($index)"
+                  (mouseenter)="setHoveredConcatSegment($index)"
+                  (mouseleave)="setHoveredConcatSegment(null)"
+                >
+                  <div class="segment-head">
+                    <span class="segment-index">Entrada {{ $index + 1 }}</span>
+                    <small>Porta {{ $index + 1 }} no destino</small>
+                  </div>
+                  <div
+                    class="segment-row"
+                    draggable="true"
+                    [class.dragging]="draggingConcatIndex == $index"
+                    (dragstart)="startConcatDrag($index, $event)"
+                    (dragend)="clearConcatDrag()"
+                    (dragover)="$event.preventDefault(); previewConcatDrop($index)"
+                    (dragleave)="clearConcatDropPreview($index)"
+                    (drop)="dropConcatAt($index)"
+                  >
+                    <select [ngModel]="path" (ngModelChange)="replaceConcatSource.emit({ index: $index, path: $event })">
+                      @for (source of sourceOptions; track source.id) {
+                        <option [value]="source.path">{{ sourceOptionLabel(source, node) }}</option>
+                      }
+                    </select>
+                    <button type="button" class="ghost grip">⋮⋮</button>
+                    <button type="button" class="ghost" (click)="moveConcatSource.emit({ index: $index, direction: -1 })">↑</button>
+                    <button type="button" class="ghost" (click)="moveConcatSource.emit({ index: $index, direction: 1 })">↓</button>
+                    <button type="button" class="danger" (click)="removeConcatSource.emit($index)">x</button>
+                  </div>
+
+                  @if (hasActiveFormat($index)) {
+                    <div class="format-row">
+                      <select
+                        [ngModel]="node.binding?.formatters?.[$index]?.pad ?? 'left'"
+                        (ngModelChange)="updateConcatFormat.emit({ index: $index, patch: { pad: $event } })"
+                      >
+                        <option value="left">pad left</option>
+                        <option value="right">pad right</option>
+                      </select>
+                      <input
+                        type="number"
+                        [ngModel]="node.binding?.formatters?.[$index]?.length ?? 0"
+                        (ngModelChange)="updateConcatFormat.emit({ index: $index, patch: { length: toNumber($event) } })"
+                        placeholder="tamanho"
+                      />
+                      <input
+                        [ngModel]="node.binding?.formatters?.[$index]?.char ?? '0'"
+                        (ngModelChange)="updateConcatFormat.emit({ index: $index, patch: { char: $event } })"
+                        placeholder="char"
+                      />
+                      <button type="button" class="ghost" (click)="clearConcatFormat.emit($index)">Sem formatacao</button>
+                    </div>
+                  } @else {
+                    <button
+                      type="button"
+                      class="ghost inline-action"
+                      (click)="updateConcatFormat.emit({ index: $index, patch: { pad: 'left', length: 1, char: '0' } })"
+                    >
+                      Configurar formatacao
+                    </button>
+                  }
+                </div>
+
+                <div
+                  class="segment-slot"
+                  [class.visible]="draggingConcatIndex !== null"
+                  [class.active]="isConcatDropPreview($index + 1)"
+                  (dragover)="$event.preventDefault(); previewConcatDrop($index + 1)"
+                  (dragleave)="clearConcatDropPreview($index + 1)"
+                  (drop)="dropConcatAt($index + 1)"
+                >
+                  <span>Inserir depois da Entrada {{ $index + 1 }}</span>
+                </div>
+              }
+            </div>
+
+            <div class="add-row">
+              <select [(ngModel)]="draftConcatSource">
+                <option value="">Adicionar campo ao concat</option>
+                @for (source of sourceOptions; track source.id) {
+                  <option [value]="source.path">{{ sourceOptionLabel(source, node) }}</option>
+                }
+              </select>
+              <button type="button" [disabled]="!draftConcatSource" (click)="draftConcatSource && addConcatSource.emit(draftConcatSource)">
+                Adicionar
+              </button>
+            </div>
+
+            <label>Separador</label>
+            <div class="preset-row">
+              <button type="button" class="ghost" (click)="applyConcatSeparatorPreset.emit('')">Sem separador</button>
+              <button type="button" class="ghost" (click)="applyConcatSeparatorPreset.emit('-')">-</button>
+              <button type="button" class="ghost" (click)="applyConcatSeparatorPreset.emit('/')">/</button>
+              <button type="button" class="ghost" (click)="applyConcatSeparatorPreset.emit('|')">|</button>
+            </div>
+            <input
+              [ngModel]="node.binding?.separator ?? ''"
+              (ngModelChange)="updateConcatSeparator.emit($event)"
+              placeholder="- / | / espaco"
+            />
+          </div>
+        }
+
+        @if (node.binding?.mode == 'defaultLiteral') {
+          <div class="binding-block">
+            <label>Valor fixo</label>
+            <div class="preset-row">
+              <button type="button" class="ghost" (click)="applyDefaultLiteralPreset.emit('APOLICE')">APOLICE</button>
+              <button type="button" class="ghost" (click)="applyDefaultLiteralPreset.emit('61199164000160')">CNPJ produtor</button>
+              <button type="button" class="ghost" (click)="applyDefaultLiteralPreset.emit('Porto')">Porto</button>
+            </div>
+            <input
+              [ngModel]="node.binding?.defaultValue ?? ''"
+              (ngModelChange)="setDefaultLiteral.emit($event)"
+              placeholder="APOLICE, 61199164000160, true..."
+            />
+          </div>
+        }
+
+        @if (node.binding?.mode == 'defaultSource') {
+          <div class="binding-block">
+            <label>Origem do default</label>
+            <select
+              [ngModel]="node.binding?.defaultSourcePath ?? ''"
+              (ngModelChange)="setDefaultSource.emit($event)"
+            >
+              <option value="">Selecione um campo da origem</option>
+              @for (source of sourceOptions; track source.id) {
+                <option [value]="source.path">{{ source.displayPath }}</option>
+              }
+            </select>
+          </div>
+        }
+
+        @if (node.binding?.mode == 'eval') {
+          <div class="binding-block">
+            <label>Expressao eval</label>
+            <div class="editor-help">
+              <strong>Vai para o payload final</strong>
+              <span>Use para calculos, condicionais e combinacoes declarativas. Este bloco e salvo como <code>eval</code> no schema final.</span>
+            </div>
+            <div class="preset-row editor-language-row">
+              <span class="mode-pill subtle">Linguagem detectada: {{ evalEditorLanguageLabel(node) }}</span>
+              <span class="mode-pill subtle">{{ evalDetectionBadge(node) }}</span>
+            </div>
+            <div class="preset-row">
+              @for (example of evalExamples; track example.label) {
+                <button type="button" class="ghost" (click)="updateEvalExpression.emit(example.value)">{{ example.label }}</button>
+              }
+            </div>
+            @defer (when node.binding?.mode == 'eval') {
+              <app-code-editor
+                [fileName]="evalEditorFileName(node)"
+                [language]="evalEditorLanguage(node)"
+                [minHeight]="240"
+                [value]="node.binding?.evalExpression ?? ''"
+                placeholder="dadosApolice.estado == 'SP' ? 'SAOPAULO' : 'nao identificado'"
+                [helperText]="evalEditorHelperText(node)"
+                (valueChange)="updateEvalExpression.emit($event)"
+              />
+            } @placeholder {
+              <div class="editor-defer-placeholder">Carregando editor de expressao...</div>
+            }
+          </div>
+        }
+
+        @if (node.binding?.mode == 'script') {
+          <div class="binding-block">
+            <label>Script do payload final</label>
+            <div class="editor-help">
+              <strong>Vai para o payload final</strong>
+              <span>Use quando alias, default, concat e eval nao forem suficientes. O front apenas cadastra esse bloco para o backend.</span>
+            </div>
+            <div class="preset-row editor-language-row">
+              <span class="mode-pill subtle">Linguagem ativa: {{ scriptEditorLanguageLabel(node) }}</span>
+              <span class="mode-pill subtle">{{ scriptDetectionBadge(node) }}</span>
+            </div>
+
+            <label>Linguagem</label>
+            <select
+              [ngModel]="node.binding?.script?.language ?? 'java'"
+              (ngModelChange)="updateScriptLanguage.emit($event)"
+            >
+              <option value="java">Java</option>
+              <option value="javascript">JavaScript</option>
+              <option value="python">Python</option>
+            </select>
+
+            <label>Tipo de retorno</label>
+            <select
+              data-testid="script-return-type-select"
+              [ngModel]="node.binding?.script?.returnType ?? node.type"
+              (ngModelChange)="updateScriptReturnType.emit($event)"
+            >
+              @for (group of returnTypeOptions; track group.label) {
+                <optgroup [label]="group.label">
+                  @for (option of group.options; track option.value) {
+                    <option [value]="option.value">{{ option.label }}</option>
+                  }
+                </optgroup>
+              }
+            </select>
+
+            <div class="preset-row">
+              @for (example of scriptExamples; track example.label) {
+                <button type="button" class="ghost" (click)="updateScriptSource.emit(example.value)">{{ example.label }}</button>
+              }
+            </div>
+
+            @defer (when node.binding?.mode == 'script') {
+              <app-code-editor
+                [fileName]="scriptEditorFileName(node)"
+                [language]="scriptEditorLanguage(node)"
+                [minHeight]="260"
+                [value]="node.binding?.script?.source ?? ''"
+                placeholder="return source.get('valor');"
+                [helperText]="scriptEditorHelperText(node)"
+                (valueChange)="updateScriptSource.emit($event)"
+              />
+            } @placeholder {
+              <div class="editor-defer-placeholder">Carregando editor de script...</div>
+            }
+          </div>
+        }
+
+        <div class="binding-block">
+          <label>{{ texts.advancedLabel }}</label>
+          <textarea
+            data-testid="advanced-expression"
+            [ngModel]="node.binding?.advancedExpression ?? ''"
+            (ngModelChange)="updateAdvancedExpression.emit($event)"
+            placeholder="concat(src('$.dadosApolice.codigoSucursal'), '-', src('$.dadosApolice.numeroApolice'))"
+          ></textarea>
+        </div>
+
+        <button type="button" class="ghost full" (click)="clearBinding.emit()">{{ texts.clearFieldConfig }}</button>
+      } @else if (node.kind == 'array') {
+        <div class="binding-block info guide-block">
+          <strong>{{ texts.mapFromGuideTitle }}</strong>
+          <ol class="guide-list">
+            <li>{{ texts.mapFromGuideStep1 }}</li>
+            <li>{{ texts.mapFromGuideStep2 }}</li>
+            <li>{{ texts.mapFromGuideStep3 }}</li>
+            <li>{{ texts.mapFromGuideStep4 }}</li>
+            <li>{{ texts.mapFromGuideStep5 }}</li>
+          </ol>
+        </div>
+        <div class="binding-block">
+          <label>map_from</label>
+          <select
+            [ngModel]="node.mapFrom?.sourcePaths?.[0] ?? ''"
+            (ngModelChange)="updateMapFromSource.emit($event)"
+          >
+            <option value="">Selecione a colecao da origem</option>
+            @for (source of sourceNodeOptions; track source.id) {
+              @if (source.kind == 'array' || source.kind == 'object') {
+                <option [value]="source.path">{{ sourceOptionLabel(source, node) }}</option>
+              }
+            }
+          </select>
+          <small>Use map_from para iterar colecoes e aplicar o item-modelo do array como schema declarativo.</small>
+        </div>
+      } @else {
+        <div class="binding-block info">
+          Este no e um container. Use os botoes do painel direito para criar filhos ou solte aqui um campo da origem para gerar um novo campo ja ligado.
+        </div>
+      }
+    } @else {
+      <div class="empty-hint large">{{ texts.emptySelection }}</div>
+    }
+  </div>
+
+  @if (validationErrors.length > 0) {
+    <div class="errors-card">
+      <strong>{{ texts.validationTitle }}</strong>
+      <ul>
+        @for (error of validationErrors; track error) {
+          <li>{{ error }}</li>
+        }
+      </ul>
+    </div>
+  }
+</section>
