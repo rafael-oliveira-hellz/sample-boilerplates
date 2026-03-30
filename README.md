@@ -2,12 +2,17 @@
 
 This repository groups example projects and starter references that can be reused as boilerplates for future work.
 
-## Projects
+## Structure
 
-- `json-mapper-angular-app`: Angular application for visual JSON/schema mapping.
-- `mongo-connect-spring-api`: Spring Boot API with MongoDB connectivity and CRUD examples for event types, partners, and products.
-- `json-schema-crud-spring-api`: Spring Boot CRUD API focused on persisting source/target JSON schema configurations.
-- `json-schema-crud-angular-workspace`: Angular workspace with host shell, microfrontend examples, and a JSON mapper application.
+### apps
+
+- `apps/json-mapper-angular-app`: Angular application for visual JSON/schema mapping.
+- `apps/json-schema-crud-angular-workspace`: Angular workspace with host shell, microfrontend examples, and a JSON mapper application.
+
+### apis
+
+- `apis/mongo-connect-spring-api`: Spring Boot API with MongoDB connectivity and CRUD examples for event types, partners, and products.
+- `apis/json-schema-crud-spring-api`: Spring Boot CRUD API focused on persisting source/target JSON schema configurations.
 
 ## Suggested Usage
 
